@@ -1,0 +1,35 @@
+#SingleInstance Force
+
+; Library includes all Netfabb_ functions
+#Include \\APP03\Scans\~Digital Dept Share\R&D Network\Scripting\AutoHotKey\Projects\NetfabbLibrary.ahk
+
+
+; ===========================================================================================================================
+; Engraving shortcuts in Netfabb
+; ===========================================================================================================================
+
+; starter variable for the F2 function in netfabb
+placedengraving =: 0
+
+#IfWinNotActive ahk_exe explorer.exe
+
+f1::
+{
+	Netfabb_Level()
+	return
+}
+
+f2::
+{
+	Netfabb_finish()
+	return
+}
+
+f3::
+{
+	Netfabb_Loop()
+	return
+}
+
+		
+	

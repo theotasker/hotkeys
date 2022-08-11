@@ -1,0 +1,108 @@
+; ===========================================================================================================================
+; Library for all functions pertaining to Logging
+; ===========================================================================================================================
+
+; start variables for logging numbers
+casesimported = 0
+casesprepped = 0
+casesengraved = 0
+hotkeysused = 0
+clickssaved = 0
+strokessaved = 0
+
+; functions to be called in main program, increments the log by (#clicks, #strokes), and 1 hotkeysused
+Log_Increment(clicks = 0, strokes = 0)
+{
+   global clickssaved, strokessaved, hotkeysused
+   clickssaved := clicks + clickssaved
+   strokessaved := strokes + strokessaved
+   hotkeysused+=1
+   return
+}
+
+; function to get the number from the individual string from the txt log
+GetNumber(x = "", y = "")
+{
+   z := StrReplace(x, y, "") ; removes the leading text
+   z := StrReplace(z, "`n", "") ; removes the new line markers
+   z += 0 ; makes the number an integer
+   return z
+}
+
+; updates the log txt with the current log variables plus existing txt variables, then sets local variables to 0
+Log_Update()
+{
+   global
+   LogDir := A_MyDocuments "\Automation\Logs\" ;folder for logs
+   LogFile := A_MyDocuments "\Automation\Logs\" A_MM "-" A_DD "-" A_YYYY ".txt" ; log file, named with todays date
+
+   Log_UpdateText() ; sets the text in case it has to create a new txt file
+   
+   if !FileExist(LogDir)
+   {
+      FileCreateDir, %LogDir%
+   }
+   if !FileExist(LogFile)
+   {
+      FileAppend, %LogText%, %Logfile% ; creates a new log file with the current variables
+   }
+   
+   FileRead, ExtantLog, %Logfile%
+   
+   LogArray := StrSplit(ExtantLog, "`n") ; creates an array of the individual lines of the txt
+   
+   ; for each variable, remove the text and convert the number string to a integer
+   importadd := GetNumber(LogArray[1], "Cases imported = ")
+   prepadd := GetNumber(LogArray[2], "Cases prepped = ")
+   engraveadd := GetNumber(LogArray[3], "Cases engraved = ")
+   hotkeysadd := GetNumber(LogArray[4], "Hotkeys used = ")
+   clicksadd := GetNumber(LogArray[5], "Mouse actions saved = ")
+   keystrokesadd := GetNumber(LogArray[6], "Keystrokes saved = ")
+   
+   ; adds 1 to the corresponding current step
+   if Step = Importing
+   {
+      casesimported = 1
+   }
+   else if Step = Prepping
+   {
+      casesprepped = 1
+   }
+   else if Step = Engraving
+   {
+      casesengraved = 1
+   }
+
+   ; adds the local log variables with the corresponding variables from the txt
+   casesimported := casesimported + importadd
+   casesprepped := casesprepped + prepadd
+   casesengraved := casesengraved + engraveadd
+   hotkeysused := hotkeysused + hotkeysadd
+   clickssaved := clickssaved + clicksadd
+   strokessaved := strokessaved + keystrokesadd
+   
+   ; updates the log text, then writes to the file
+   Log_UpdateText()
+   FileDelete, %LogFile%
+   FileAppend, %LogText%, %Logfile%
+   
+   ; reset local variables to 0
+   casesimported = 0
+   casesprepped = 0
+   casesengraved = 0
+   hotkeysused = 0
+   clickssaved = 0
+   strokessaved = 0
+   
+      
+   return
+}
+
+Log_UpdateText()
+{
+   global
+   LogText = Cases imported = %casesimported%`nCases prepped = %casesprepped%`nCases engraved = %casesengraved%`nHotkeys used = %hotkeysused%`nMouse actions saved = %clickssaved%`nKeystrokes saved = %strokessaved%
+   return
+}
+
+

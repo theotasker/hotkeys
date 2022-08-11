@@ -1,0 +1,376 @@
+#SingleInstance, Force
+
+; Library includes all Ortho_ functions
+#Include \\APP03\Scans\~Digital Dept Share\R&D Network\Scripting\AutoHotKey\Projects\OrthoLibrary.ahk
+
+CoordMode, Mouse, Client
+CoordMode, Pixel, Client
+
+; =========================================================================================================================
+; Multi Site/Extra functions
+; =========================================================================================================================
+
+; Set the location of the progress bar
+Pause::
+{
+	Gui, Add, Text, x0 y0 w320 h15 , Move this box to where you want your progress bar to be
+	Gui, Add, Button, x52 y15 w120 h20 gSetLocation, Set Location
+	Gui, Show, w320 h30, Select Location
+	return
+}
+
+; Subroutine for the progress bar location set GUI
+SetLocation:
+{
+	Gui, Show
+	WinGetPos, VarX, VarY,,, Select Location
+	ProgX := "x" + VarX
+	ProgY := "y" + VarY
+	Gui, Destroy
+	return
+}
+
+; ===========================================================================================================================
+; OrthoAnalyzer/ApplianceDesigner Views, including Top(bottom), Front(back), Right(left), transparancy, and switching model
+; ===========================================================================================================================
+
+; If either OrthoAnalyzer - [\\APP03\New Scans or ApplianceDesigner - [\\APP03\New Scans are open
+SettitleMatchMode, 1
+#IfWinExist ahk_group ThreeShape
+
+; Top(bottom) View
+!+t::
+{
+	FirstViewX := 1902 ; top view x position
+    FirstViewY := 239 ; top view y
+    SecondViewX := 1902 ; bottom view x
+    SecondViewY := 205 ; bottom view y
+	RefVar := VarT
+	
+    Ortho_View()
+	
+	VarT := A_TickCount
+	return
+}
+
+; Right(left) View
+!+r::
+{
+	FirstViewX := 1902 ; Right view x position
+    FirstViewY := 177 ; right view y
+    SecondViewX := 1902 ; left view x
+    SecondViewY := 147 ; left view y
+	RefVar := VarR
+	
+    Ortho_View()
+	
+	VarR := A_TickCount
+	return
+}
+
+; Front(back) View
+!+f::
+{
+	FirstViewX := 1902 ; front view x position
+    FirstViewY := 87 ; front view y
+    SecondViewX := 1902 ; back view x
+    SecondViewY := 117 ; back view y
+	RefVar := VarF
+	
+    Ortho_View()
+	
+	VarF := A_TickCount
+	return
+}
+
+; Transparency
+!+c::
+{
+	FirstViewX := 1902 ; transparency x position
+    FirstViewY := 800 ; transparency y
+    SecondViewX := 1902 ; transparency x
+    SecondViewY := 800 ; transparency y
+	
+    Ortho_View()
+	return
+}
+
+; Switch Visible Model
+!+v::
+{
+	UpperDotX := 1708
+	UpperDotY := 79
+	LowerDotX := 1708
+	LowerDotY := 106
+	
+	Ortho_VisibleModel()
+	return
+}
+
+; Export finished case
+!+.::
+{
+	Ortho_Export()
+	return
+}
+
+; ===========================================================================================================================
+; OrthoAnalyzer/ApplianceDesigner functions for pushing forward the dialogue boxes, all using !+g
+; ===========================================================================================================================
+
+SetTitleMatchMode, 3
+
+#IfWinExist Occlusion
+!+g::
+{
+	ControlFocus, TButton3, Occlusion
+	Send {Enter}
+	return
+}
+
+#IfWinExist Plane alignment
+!+g::
+{
+	ControlFocus, TComboBox2, Plane alignment
+	Send {Enter}
+	return
+}
+
+#IfWinExist Virtual Base, Step 1/3: Define cut
+!+g::
+{
+	ControlFocus, TButton1, Virtual Base
+	Send {Enter}
+	return
+}
+
+#IfWinExist Virtual Base, Step 2/3: Fit base
+!+g::
+{
+	; Globals for progress bar
+	global ProgX, ProgY
+	
+	MsgBox, 3, Base Size, Full Base? (no for minimal base)
+	IfMsgBox, Yes
+	{
+		Gui, Add, Progress, vprogress w300 h45
+		Gui, Show, w320 h25 %ProgX% %ProgY%, Script Running
+		Gui, +AlwaysOnTop
+		
+		; Adjust basing parameters 
+		BlockInput MouseMove
+		Sleep, 100
+		ControlFocus, TIntegerEdit1, Virtual Base
+		Sleep, 100
+		Send {Home}{Shift down}{Right 3}{Shift Up}0
+		Sleep, 100
+		
+		GuiControl,, Progress,25
+		
+		ControlFocus, TFloatEdit2, Virtual Base
+		Sleep, 200
+		Send {Home}{Shift down}{Right 5}{Shift Up}{Delete}
+		Sleep, 100
+		Send 7
+		Sleep, 100
+		Send 0
+		Sleep, 100
+		
+		GuiControl,, Progress, 50
+		
+		ControlFocus, TFloatEdit1, Virtual Base
+		Sleep, 100
+		Send {Home}{Shift down}{Right 3}{Shift Up}1
+		Sleep, 100
+		
+		GuiControl,, Progress, 75
+		
+		ControlFocus, TButton1, Virtual Base
+		Send {Enter}
+		BlockInput MouseMoveOff
+	}
+	IfMsgBox, No
+	{
+		Gui, Add, Progress, vprogress w300 h45
+		Gui, Show, w320 h25 %ProgX% %ProgY%, Script Running
+		Gui, +AlwaysOnTop
+		
+				; Adjust basing parameters 
+		BlockInput MouseMove
+		Sleep, 100
+		ControlFocus, TIntegerEdit1, Virtual Base
+		Sleep, 100
+		Send {Home}{Shift down}{Right 3}{Shift Up}0
+		Sleep, 100
+		
+		GuiControl,, Progress, 25
+		
+		ControlFocus, TFloatEdit2, Virtual Base
+		Sleep, 200
+		Send {Home}{Shift down}{Right 5}{Shift Up}{Delete}
+		Sleep, 100
+		Send 7
+		Sleep, 100
+		Send 0
+		Sleep, 100
+		
+		GuiControl,, Progress, 50
+		
+		ControlFocus, TFloatEdit1, Virtual Base
+		Sleep, 100
+		Send {Home}{Shift down}{Right 3}{Shift Up}
+		Sleep, 100
+		Send 7
+		Sleep, 100
+		Send 0
+		Sleep, 100
+		
+		GuiControl,, Progress, 75
+		
+		ControlFocus, TButton1, Virtual Base
+		Send {Enter}
+		BlockInput MouseMoveOff
+	}
+	
+	Gui, Destroy
+	return
+}
+
+#IfWinExist Virtual Base, Step 3/3: Create base
+!+g::
+{
+	ControlFocus, TButton4, Virtual Base
+	Send {Enter}
+	return
+}
+
+; ===========================================================================================================================
+; OrthoAnalyzer/ApplianceDesigner Sculpting Tool Selections
+; ===========================================================================================================================
+
+#IfWinExist Sculpt
+
+; Wax Knife preset double tap tools
+!+1::
+{
+	FirstKnife := 1
+	SecondKnife := 5
+	
+	RefVar := Var1
+	
+	Ortho_Wax()
+	
+	Var1 := A_TickCount
+
+	return
+}
+
+!+2::
+{
+	FirstKnife := 2
+	SecondKnife := 6
+	
+	RefVar := Var2
+	
+	Ortho_Wax()
+	
+	Var2 := A_TickCount
+
+	return
+}
+
+!+3::
+{
+	FirstKnife := 3
+	SecondKnife := 7
+	
+	RefVar := Var3
+	
+	Ortho_Wax()
+	
+	Var3 := A_TickCount
+
+	return
+}
+
+!+5::
+{
+	FirstKnife := 4
+	SecondKnife := 4
+	
+	RefVar := 0
+	
+	Ortho_Wax()
+
+	return
+}
+
+; Artifact Removal
+!+a::
+{
+	IfWinExist Sculpt, Remove Artifacts settings
+	{
+		WinActivate Sculpt
+		BlockInput MouseMove
+		MouseGetPos, x, y
+		Click, 80, 250
+		MouseMove, %x%, %y%, 0
+		BlockInput MouseMoveOff
+	}
+	else
+	{
+		WinActivate Sculpt
+		BlockInput MouseMove
+		MouseGetPos, x, y
+		Click, 120, 105
+		MouseMove, %x%, %y%, 0
+		BlockInput MouseMoveOff
+	}
+	return
+}
+
+; Plane Cut
+!+p::
+{
+	WinActivate Sculpt
+	BlockInput MouseMove
+	MouseGetPos, x, y
+	Click, 164, 105
+	MouseMove, %x%, %y%, 0
+	BlockInput MouseMoveOff
+	return
+}
+
+; Spline Cut
+!+s::
+{
+	IfWinExist Sculpt, Spline cut settings
+	{
+		WinActivate Sculpt
+		BlockInput MouseMove
+		MouseGetPos, x, y
+		Click, 170, 300
+		MouseMove, %x%, %y%, 0
+		BlockInput MouseMoveOff
+	}
+	else
+	{
+		WinActivate Sculpt
+		BlockInput MouseMove
+		MouseGetPos, x, y
+		Click, 34, 139
+		Click, 164, 219
+		MouseMove, %x%, %y%, 0
+		BlockInput MouseMoveOff
+	}
+	return
+}
+
+; OK
+!+g::
+{
+	ControlFocus, TButton2, Sculpt
+	Send {Enter}
+	return
+}
+

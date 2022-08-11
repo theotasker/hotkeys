@@ -1,0 +1,6 @@
+Cases imported = 124
+Cases prepped = 0
+Cases engraved = 0
+Hotkeys used = 1095
+Mouse actions saved = 7192
+Keystrokes saved = 10333

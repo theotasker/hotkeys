@@ -1,0 +1,276 @@
+#SingleInstance Force
+
+placedengraving =: 0
+
+
+#IfWinNotActive ahk_exe explorer.exe
+
+f1::
+{
+	If !WinActive(ahk_exe netfabb.exe "Autodesk Netfabb")
+	{
+		Msgbox,, Wrong Program Active, F1 should only be used while Netfabb is active
+		Exit
+	}
+	
+	try ControlGetText, highlighted, Edit5, ahk_exe netfabb.exe
+	catch e
+	{
+		MsgBox Couldn't retrieve control value!
+		Exit
+	}
+		
+	if highlighted = 0.00 mm
+	{
+		MsgBox,, No Part Selected, Please select a part to level and engrave!
+		Exit
+	}
+			
+	; Level Model
+	Send {Control Down}w{Control Up}
+	KeyWait, LButton, D
+	BlockInput, MouseMove
+	
+	Gui, Add, Progress, vprogress w300 h45
+	Gui, Show, w320 h25 %ProgX% %ProgY%, Script Running
+    Gui, +AlwaysOnTop	
+	
+	Sleep, 300
+	ControlFocus, Apply, Autodesk Netfabb
+	Sleep, 100
+	Send {Enter}
+	
+	GuiControl,, Progress, 20
+	
+	Sleep, 200
+	
+	; Engrave
+	Send {Control Down}e{Control Up}
+	Sleep, 200
+	
+	GuiControl,, Progress, 40
+	
+	; Remove Man/Max
+	ControlGetText, Engraving4, Edit4, Autodesk Netfabb
+	ControlGetText, Engraving17, Edit17, Autodesk Netfabb
+	ControlGetText, Engraving18, Edit18, Autodesk Netfabb
+	ControlGetText, Engraving1, Edit1, Autodesk Netfabb
+	
+	GuiControl,, Progress, 60
+	
+	If InStr(Engraving17, "Max") or InStr(Engraving17, "Man")
+	{
+		ControlFocus, Edit17, Autodesk Netfabb
+		DeleteTag()
+	}
+	If InStr(Engraving4, "Max") or InStr(Engraving4, "Man")
+	{
+		ControlFocus, Edit4, Autodesk Netfabb
+		DeleteTag()
+	}
+		If InStr(Engraving18, "Max") or InStr(Engraving18, "Man")
+	{
+		ControlFocus, Edit18, Autodesk Netfabb
+		DeleteTag()
+	}
+	
+	If InStr(Engraving1, "Max") or InStr(Engraving1, "Man")
+	{
+		ControlFocus, Edit1, Autodesk Netfabb
+		DeleteTag()
+	}
+	
+	else
+	{
+		BlockInput MouseMoveOff
+		KeyWait, LButton, D
+		placedengraving =: 1
+	}
+	
+	GuiControl,, Progress, 100
+	Gui, Destroy
+	
+	return
+}
+
+f2::
+{
+	If !WinActive(ahk_exe netfabb.exe "Autodesk Netfabb")
+	{
+		MsgBox,, Wrong Window Active, F2 should only be used in Netfabb, or to rename in Windows Explorer
+		Exit
+	}
+	
+	try ControlGetText, aspectratio, Button5, ahk_exe netfabb.exe
+	catch e
+	{
+		Msgbox,, Wrong Step, F2 should only be used immediately after F1, after placing the engraving
+		Exit
+	}
+	
+	if aspectratio != Keep Aspect Ratio
+	{
+		Msgbox,, Wrong Step, F2 should only be used immediately after F1, after placing the engraving
+		Exit
+	}
+			
+	If placedengraving =: 1
+	{
+		; Finish Engrave
+		BlockInput, MouseMove
+		
+		Gui, Add, Progress, vprogress w300 h45
+		Gui, Show, w320 h25 %ProgX% %ProgY%, Script Running
+		Gui, +AlwaysOnTop		
+		
+		ControlFocus, Apply, Autodesk Netfabb
+		Send {Enter}
+		
+		GuiControl,, Progress, 20
+		
+		WinWaitActive, Confirmation,, 2
+		
+		Send {Enter}
+		
+		GuiControl,, Progress, 40
+		
+		placedengraving =: 0
+		
+		Sleep, 2000
+		
+		GuiControl,, Progress, 60
+		
+		; Export
+		Send !f
+		Sleep, 100
+		Send r
+		Sleep, 100
+		Send {Down 2}{Enter}
+		WinWaitActive, Export,, 1
+		
+		GuiControl,, Progress, 80
+		
+		if ErrorLevel
+		{
+			BlockInput MouseMoveOff
+			Gui, Destroy
+			MsgBox Timeout
+			return
+		}
+		else
+			Send {Enter 2}
+			Gui, Destroy
+			BlockInput MouseMoveOff
+		return
+	}
+	else
+	{
+		MsgBox Click to place engraving first
+		return
+	}
+}
+
+f3::
+{
+	; if the main box is up, delete the part and return to import
+	If WinActive(ahk_exe netfabb.exe "Autodesk Netfabb")
+	{
+		
+		
+		; Circle Around
+		Send {Delete}{Enter}
+		Sleep, 100
+		Send !f
+		Sleep, 100
+		Send p
+		return
+	}
+	
+	; if the dialogue box is up, run the repair script
+	else if WinActive(ahk_exe netfabb.exe "Export")
+	{
+		; Repair
+		ControlFocus, Button1, Export
+		Send {Enter}
+		Sleep, 100
+		Send !pe
+		Sleep, 200
+		Send {Down 2}`t{Enter}
+		WinWait, Autodesk Netfabb Standard, One job in queue
+		Sleep, 1000
+		WinWait, Autodesk Netfabb Standard, No jobs
+		Send `t`t`t{Down}
+		
+		; Export
+		Send !f
+		Sleep, 100
+		Send r
+		Sleep, 100
+		Send {Down 2}{Enter}
+		WinWaitActive, Export,, 1
+		if ErrorLevel
+		{
+			MsgBox Timeout
+			return
+		}
+		else
+			Send {Enter 2}
+		return
+	}
+
+	else
+	{
+		MsgBox,, Wrong Window, F3 should only be used in NetFabb
+		Exit
+	}
+}
+
+
+f4::
+{
+	If WinActive("Export")
+	{
+		; Repair
+		ControlFocus, Button1, Export
+		Send {Enter}
+		Sleep, 100
+		Send !pe
+		WinWait, Automatic Repair
+		Sleep, 200
+		Send {Down 2}`t{Enter}
+		WinWait, Autodesk Netfabb Standard, One job in queue
+		Sleep, 1000
+		WinWait, Autodesk Netfabb Standard, No jobs
+		Send `t`t`t{Down}
+		
+		; Export
+		Send !f
+		Sleep, 100
+		Send r
+		Sleep, 100
+		Send {Down 2}{Enter}
+		WinWaitActive, Export,, 1
+		if ErrorLevel
+		{
+			MsgBox Timeout
+			return
+		}
+		else
+			Send {Enter 2}
+		return
+	}
+}
+
+DeleteTag()
+{
+	global placedengraving
+	Sleep, 100
+	Send {End}
+	Sleep, 100
+	Send `b`b`b`b
+	BlockInput MouseMoveOff
+	KeyWait, LButton, D
+	placedengraving =: 1
+}
+		
+	
