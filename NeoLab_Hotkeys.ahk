@@ -52,7 +52,7 @@ f4:: ; place cursor in the search field in RXWizard for barcode scanning
 f5:: ; Swap between review and edit pages
 {
 
-	neo_swapPages()
+	neo_swapPages(destPage="swap")
 
 	return
 }

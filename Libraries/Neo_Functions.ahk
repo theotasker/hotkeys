@@ -112,14 +112,15 @@ neo_swapPages(destPage) ; swaps between review and edit pages
 		Exit
 	}
 
-	if (destPage = "review")
+	if (destPage = "review" or (destPage = "swap" and InStr(currentURL, "/edit/")))
 	{
 		destURL = StrReplace(currentURL, "/edit/", "/review/")
 	}
-	else if (destPage = "edit")
+	else if (destPage = "edit" or (destPage = "swap" and InStr(currentURL, "/review/")))
 	{
 		destURL = StrReplace(currentURL, "/review/", "/edit/")
 	}
+	else
 
 	NeoDriver.Get(destURL)
 	return destURL
