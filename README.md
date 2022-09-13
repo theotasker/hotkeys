@@ -2,6 +2,12 @@
 
 Contains all scripts and libraries needed for running the "Neolab Hotkeys" AutoHotKey program. 
 
+Neolab_Hotkeys.ahk is the main script, it has dependencies on several .ahk libraries in the \Libraries\ folder. Users should be given the shortcut in the top level folder, so it will run the latest version 
+
+Main functions of the script include automating data entry/retreival between RXWizard, MyCadent, and 3Shape for importers, enabling the use of the 3D mouse buttons for functions in 3Shape (by replicating mouse clicks), prepping files for auto importing, and taking occlusion screenshots
+
+
+
 ## Installation Instructions 
 
 Selenium 2.0.9 exe
