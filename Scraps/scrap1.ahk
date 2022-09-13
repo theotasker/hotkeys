@@ -2,31 +2,11 @@
 CoordMode, Mouse, Client
 CoordMode, Pixel, Client
 
-GroupAdd, ThreeShape, OrthoAnalyzer - [
-GroupAdd, ThreeShape, ApplianceDesigner - [
+#NoEnv
 
+EnvGet, retrieveTest, STLs
 
-SettitleMatchMode, 1
-#IfWinExist ahk_group ThreeShape 
-
-3ShapeSteps := "Prepare occlusion,Setup plane alignment,Virtual base,Sculpt maxillary,Sculpt mandibular"
-
-DetectHiddenWindows, On
-DetectHiddenText, On
-VarSetCapacity(OutputVar, 255)
-
-SettitleMatchMode, 2
-SettitleMatchMode, slow
-
-ControlFocus, TdfGroupInfo1, ahk_group ThreeShape
-ControlGetText, PrepStep, TdfGroupInfo1, ahk_group ThreeShape
-if ErrorLevel   ; i.e. it's not blank or zero.
-    MsgBox, The window does not exist.
-else
-    MsgBox, The window exists.
-
-MsgBox % PrepStep
-
+msgbox % retrieveTest
 
 
 
