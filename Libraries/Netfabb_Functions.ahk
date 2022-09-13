@@ -1,0 +1,285 @@
+; ===========================================================================================================================
+; Library for all Standalone functions pertaining to Netfabb
+; ===========================================================================================================================
+
+Netfabb_Level() ; starts leveling, finishes leveling after the click, and removes the max/man tags in engraving
+{
+	global
+
+	If !WinActive(ahk_exe netfabb.exe "Autodesk Netfabb") ; if netfabb isn't the active window, display error and stop
+	{
+		Msgbox,, Wrong Program Active, F1 should only be used while Netfabb is active
+		Exit
+	}
+
+	; Level Model
+	Send {Control Down}w{Control Up}
+	Sleep, 100
+
+	if WinExist(ahk_exe netfabb.exe "Warning")
+	{
+		Exit
+	}
+
+	KeyWait, LButton, D ; waits for the user to click the bottom of the model
+	BlockInput, MouseMove
+
+	Gui, Add, Progress, vprogress w300 h45 ; progress bar gui
+	Gui, Show, w320 h25 %ProgX% %ProgY%, Script Running
+    Gui, +AlwaysOnTop
+
+	Sleep, 300
+	ControlFocus, Apply, Autodesk Netfabb ; hits the apply button on the leveling step
+	Sleep, 100
+	Send {Enter}
+
+	GuiControl,, Progress, 20
+
+	Sleep, 200
+
+	Send {Control Down}e{Control Up} ; shortcut for the engrave function
+	Sleep, 200
+
+	GuiControl,, Progress, 40
+
+	; Remove Man/Max, could exist in any of these 4 edit fields, depending on the install version
+	ControlGetText, Engraving4, Edit4, Autodesk Netfabb
+	ControlGetText, Engraving17, Edit17, Autodesk Netfabb
+	ControlGetText, Engraving18, Edit18, Autodesk Netfabb
+	ControlGetText, Engraving1, Edit1, Autodesk Netfabb
+	ControlGetText, Engraving15, Edit15, Autodesk Netfabb
+
+	GuiControl,, Progress, 60
+
+	If InStr(Engraving17, "Max") or InStr(Engraving17, "Man")
+	{
+		ControlFocus, Edit17, Autodesk Netfabb
+		Netfabb_DeleteTag() ; see this function at the end, just consolidates the number of lines here.
+	}
+	If InStr(Engraving4, "Max") or InStr(Engraving4, "Man")
+	{
+		ControlFocus, Edit4, Autodesk Netfabb
+		Netfabb_DeleteTag()
+	}
+		If InStr(Engraving18, "Max") or InStr(Engraving18, "Man")
+	{
+		ControlFocus, Edit18, Autodesk Netfabb
+		Netfabb_DeleteTag()
+	}
+	If InStr(Engraving1, "Max") or InStr(Engraving1, "Man")
+	{
+		ControlFocus, Edit1, Autodesk Netfabb
+		Netfabb_DeleteTag()
+	}
+	If InStr(Engraving15, "Max") or InStr(Engraving15, "Man")
+	{
+		ControlFocus, Edit15, Autodesk Netfabb
+		Netfabb_DeleteTag() ; see this function at the end, just consolidates the number of lines here.
+	}
+
+	else ; if there was no man or max, just wait until the engraving click to update the confirmation variable
+	{
+		Gui, Destroy
+		BlockInput MouseMoveOff
+		KeyWait, LButton, D
+		placedengraving =: 1
+	}
+	return
+}
+
+Netfabb_Finish() ; function to finish engraving, and attempt to export the model. won't pass the shell error message box
+{
+	global
+
+	If !WinActive(ahk_exe netfabb.exe "Autodesk Netfabb") ; confirms that netfabb is the active window
+	{
+		MsgBox,, Wrong Window Active, F2 should only be used in Netfabb, or to rename in Windows Explorer
+		Exit
+	}
+
+	; tries to find the check box for "keep aspect ratio", which should only appear in the engraving module
+	try ControlGetText, aspectratio, Keep Aspect Ratio, ahk_exe netfabb.exe
+	catch e
+	{
+		Msgbox,, Wrong Step, F2 should only be used immediately after F1, after placing the engraving (couldn't find aspect button)
+		Exit
+	}
+
+
+	If placedengraving =: 1 ; variable from F1 function that only appears if there was a click to place the engraving
+	{
+		; Finish Engrave
+		BlockInput, MouseMove
+
+		; progress bar gui
+		Gui, Add, Progress, vprogress w300 h45
+		Gui, Show, w320 h25 %ProgX% %ProgY%, Script Running
+		Gui, +AlwaysOnTop
+
+		; added wait to attempt to fix error with missing the control focus send
+		WinActivate, Autodesk Netfabb
+		WinWaitActive, Autodesk Netfabb
+
+		ControlFocus, Apply, Autodesk Netfabb ; hits the apply button for the engraving
+
+		Sleep, 100 ; Another wait to attempt to fix the wait error
+		Send {Enter}
+
+		GuiControl,, Progress, 20
+
+		WinWaitActive, Confirmation,, 2 ; confirms the "delete original model" popup
+		Send {Enter}
+
+		GuiControl,, Progress, 40
+
+		placedengraving =: 0 ; resets this counter for next time
+
+		Sleep, 2000 ; waits for the engraving to finish
+
+		GuiControl,, Progress, 60
+
+		; Export
+		Send !f
+		Sleep, 300
+		Send r
+		Sleep, 100
+		Send {Down 2}{Enter} ; gets down to "as STL"
+		WinWaitActive, Export,, 1
+
+		GuiControl,, Progress, 80
+
+		if ErrorLevel ; if the export window couldn't be found
+		{
+			BlockInput MouseMoveOff
+			Gui, Destroy
+			MsgBox Timeout
+			return
+		}
+		else
+			Send {Enter 2} ; once to confirm, a second time to hit the "optimize" button if it appears
+			Gui, Destroy
+			BlockInput MouseMoveOff
+		return
+	}
+	else
+	{
+		MsgBox Click to place engraving first
+		return
+	}
+}
+
+Netfabb_Loop() ; deletes the highlighted model and returns to import, or repairs model if on the export box with an error
+{
+	global
+	; if the main box is up, delete the part and return to import
+	If WinActive(ahk_exe netfabb.exe "Autodesk Netfabb")
+	{
+		BlockInput, MouseMove
+
+		; progress bar gui
+		Gui, Add, Progress, vprogress w300 h45
+		Gui, Show, w320 h25 %ProgX% %ProgY%, Script Running
+		Gui, +AlwaysOnTop
+
+		WinActivate, ahk_exe netfabb.exe
+
+		sleep, 200
+
+		; Circle Around
+		Send {Delete}{Enter}
+
+		GuiControl,, Progress, 33
+
+		Sleep, 100
+		Send !f
+
+		GuiControl,, Progress, 66
+
+		Sleep, 100
+		Send p
+
+		GuiControl,, Progress, 100
+		Gui, Destroy
+		BlockInput, MouseMoveOff
+
+		return
+	}
+
+	; if the dialogue box is up, run the repair script
+	else if WinActive(ahk_exe netfabb.exe "Export")
+	{
+		BlockInput MouseMove
+		; progress bar gui
+		Gui, Add, Progress, vprogress w300 h45
+		Gui, Show, w320 h25 %ProgX% %ProgY%, Script Running
+		Gui, +AlwaysOnTop
+
+		; Repair
+		ControlFocus, Cancel, Export ; hits the cancel button on the export
+		Send {Enter}
+		Sleep, 100
+
+		GuiControl,, Progress, 20
+
+		Send !pe ; gets to the repair module
+		Sleep, 200
+
+		GuiControl,, Progress, 40
+
+		Send {Down 2}`t{Enter}
+		WinWait, Autodesk Netfabb Standard, One job in queue ; waits for the repair job to enter que
+		Sleep, 1000
+
+		GuiControl,, Progress, 60
+
+		WinWait, Autodesk Netfabb Standard, No jobs ; and waits for it to finish
+		Send `t`t`t{Down}
+
+		GuiControl,, Progress, 80
+
+		; Export
+		Send !f
+		Sleep, 100
+
+		GuiControl,, Progress, 90
+
+		Send r
+		Sleep, 100
+
+		GuiControl,, Progress, 100
+
+		Send {Down 2}{Enter}
+		WinWaitActive, Export,, 1
+		if ErrorLevel
+		{
+			BlockInput MouseMoveOff
+			Gui, Destroy
+			MsgBox Timeout
+			return
+		}
+		else
+			Send {Enter 2}
+			BlockInput MouseMoveOff
+			Gui, Destroy
+		return
+	}
+
+	else
+	{
+		MsgBox,, Wrong Window, F3 should only be used in NetFabb
+		Exit
+	}
+}
+
+Netfabb_DeleteTag() ; used at the end of F1, deletes the man or max tag off the end
+{
+	global
+	Sleep, 100
+	Send {End}
+	Sleep, 100
+	Send `b`b`b`b
+	Gui, Destroy
+	BlockInput MouseMoveOff
+	KeyWait, LButton, D
+	placedengraving =: 1
+}
