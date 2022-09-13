@@ -1,3 +1,5 @@
+NeoCheck := 0
+
 neo_startWebDriver()
 {
 	global

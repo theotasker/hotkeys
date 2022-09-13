@@ -2,8 +2,6 @@
 ; Combined functions for Importing, Prepping, and Engraving, using netfabb, 3Shape, and the websites
 ; ===========================================================================================================================
 
-; test
-
 ; ===========================================================================================================================
 ; AutoHotKey Startup Stuff
 ; ===========================================================================================================================
@@ -20,21 +18,11 @@ CoordMode, Pixel, Client
 #Include D:\hotkeys\Libraries\Netfabb_Functions.ahk
 #Include D:\hotkeys\Libraries\Ortho_Functions.ahk
 
-; starter variable for the F2 function in netfabb
-placedengraving =: 0
-
-; Variables set at the start to see if any webdrivers have been started previously
-NeoCheck := 0
-Cadentcheck := 0
-
 SetBox() ; opens the settings box to select step
 
 ; ===========================================================================================================================
 ; Engraving shortcuts in Netfabb
 ; ===========================================================================================================================
-
-; starter variable for the F2 function in netfabb
-placedengraving =: 0
 
 #IfWinNotActive ahk_exe explorer.exe
 

@@ -1,3 +1,5 @@
+Cadentcheck := 0
+
 Cadent_StartWebDriver()
 {
 	global
