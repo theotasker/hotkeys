@@ -6,8 +6,7 @@
 ; AutoHotKey Startup Stuff
 ; ===========================================================================================================================
 
-#SingleInstance, Force
-
+#SingleInstance, Force 
 CoordMode, Mouse, Client ; mouse and pixel coordinates will be based on the client, instead of screen or window. Most precise
 CoordMode, Pixel, Client
 
@@ -24,7 +23,7 @@ SetBox() ; opens the settings box to select step
 ; Engraving shortcuts in Netfabb
 ; ===========================================================================================================================
 
-#IfWinNotActive ahk_exe explorer.exe
+#IfWinNotActive ahk_exe explorer.exe ; these shouldn't overwrite the default windows functions
 
 f1::
 {
@@ -39,42 +38,21 @@ f2::
 }
 
 
-#IfWinNotActive ahk_class Notepad
-
 ; =========================================================================================================================
 ; RXWizard Shortcuts
 ; =========================================================================================================================
+#IfWinNotActive ahk_class Notepad
 
-; shortcut to call the home function and return to the cases page
-f4::
+f4:: ; place cursor in the search field in RXWizard for barcode scanning
 {
-    neo_navigateToCases()
+    neo_activate()
     return
 }
 
-; shortcut to navigate to review from edit page, must be on edit page
-f5::
+f5:: ; Swap between review and edit pages
 {
 
-	temppath = #main-content-wrapper > div.page-content > main > div.card > div > div:nth-child(1) > button > span
-
-	temppath2 = #main-content-wrapper > div.page-content > main > div.card > div > div:nth-child(1) > button
-
-	try new WebDriverWait(NeoDriver, 10).until(ExpectedConditions.element_to_be_clickable(By.CSS_SELECTOR, temppath2))
-	catch e
-	{
-		Gui, Destroy
-		MsgBox,, Web Error, Couldn't find the start button before it was clicked the first time
-		Exit
-	}
-
-
-
-	webstep := NeoDriver.findElementByCss(temppath2).Attribute("innerText")
-
-	NeoDriver.findElementByCss(temppath2).sendKeys(Keys.RETURN)
-
-	msgbox % webstep
+	neo_swapPages()
 
 	return
 }
@@ -125,8 +103,7 @@ f6::
 	GuiControl,, Progress, 100
 	Gui, Destroy
 
-	neo_navigateToCases()
-
+	neo_activate()
 
 	return
 }
