@@ -45,7 +45,7 @@ f2::
 
 f4:: ; place cursor in the search field in RXWizard for barcode scanning
 {
-    neo_activate()
+    neo_activate(scanField=true)
     return
 }
 
@@ -103,7 +103,7 @@ f6::
 	GuiControl,, Progress, 100
 	Gui, Destroy
 
-	neo_activate()
+	neo_activate(scanField=true)
 
 	return
 }
@@ -628,7 +628,7 @@ Insert::
 
 		GuiControl,, Progress, 10
 
-		Neo_Activate()
+		Neo_Activate(scanField=false)
 
 		GuiControl,, Progress, 20
 
@@ -684,7 +684,7 @@ Insert::
 		Sleep, 500
 		CaptureScreen(screenshotname)
 
-		Neo_Activate()
+		Neo_Activate(scanField=false)
 
 		; tries to find the website button to upload files and click it
 		try NeoDriver.findElementByXpath(Path_UploadFileXPATH).Click()
