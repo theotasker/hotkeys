@@ -212,7 +212,7 @@ neo_Stop() ; hits the stop button on the review page
 		{
 			NeoDriver.findElementByCss(currentstepxpath).Click
 
-			Neo_Activate(scanField=false
+			Neo_Activate(scanField=false)
 
 			WinWaitActive, New England Orthodontic Laboratory - Google Chrome,, 10
 
