@@ -187,8 +187,6 @@ f12:: ; renames arches in temp models folder, asks user for arch selection and a
 
 	finalizeSTLs(finishOptions, existingArchFilenames, filenameBase)
 
-	msgbox,, Importing Complete, Successfully queued %filenameBase% for importing
-
 	return
 }
 
