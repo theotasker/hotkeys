@@ -380,6 +380,35 @@ Ortho_Export() ; While in model edit, clicks the green check mark and exports mo
 	return
 }
 
+Ortho_takeBitePics(patientInfo) {
+	if !WinExist("ahk_group ThreeShape")
+		{
+			MsgBox,, Wrong Window, Case must be open in OrthoAnalyzer or ApplianceDesigner
+			Exit
+		}
+
+	FileRemoveDir, %screenshotDir%, 1
+	FileCreateDir, %screenshotDir%
+
+	screenshotName := patientInfo["firstName"] patientInfo["lastName"]
+
+	Ortho_View(frontViewY, bottomViewY, topTick)
+	Sleep, 500
+	CaptureScreen(screenshotName "Front.jpg") ; function defined in CaptureScreen Library
+
+	Ortho_View(leftViewY, bottomViewY, topTick)
+	Sleep, 500
+
+	CaptureScreen(screenshotName "Left.jpg")
+
+	Ortho_View(rightViewY, bottomViewY, topTick)
+	Sleep, 500
+
+	CaptureScreen(screenshotName "Right.jpg")
+
+	return screenshotDir
+}
+
 ortho_sendText(to_send, target_box, target_window)
 {
 	While(return_text != to_send && loop_check < 5)

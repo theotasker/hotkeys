@@ -1,22 +1,34 @@
-neo_startWebDriver()
+NeoCheck := false
+
+ChromeGet(IP_Port := "127.0.0.1:9222") ; Don't Touch, attaches web driver to last opened tab
+	{
+		Driver := ComObjCreate("Selenium.ChromeDriver")
+		Driver.SetCapability("debuggerAddress", IP_Port)
+		Driver.Start()
+		return Driver
+	}
+
+neo_startWebDriver() ; closes existing Chromes and opens a new one, binds it to NeoDriver
 {
 	global
 
 	if WinExist("ahk_exe chrome.exe")
 		MsgBox, 4, Close Chrome?, Close all current instances of Chrome? (suggested)
 			IfMsgBox, Yes
-				; Close all instances of chrome
-				While WinExist("ahk_exe chrome.exe")
+			{
+				While WinExist("ahk_exe chrome.exe") ; close all instances of chrome
 				{
 					Loop, 10
 					{
 						WinClose, ahk_exe chrome.exe
 					}
 				}
+			}
 			IfMsgBox, No
-				nothing := 0
+			{
+				return
+			}
 
-	; Check to make sure that the modified Chrome shortcut is in the right place
 	chromelocation = %A_MyDocuments%\Automation\ChromeForAHK.lnk
 	if !FileExist(chromelocation)
 	{
@@ -24,7 +36,6 @@ neo_startWebDriver()
 		Exit
 	}
 
-	; Open Chrome instance and assign it to neolab
 	Run, ChromeForAHK.lnk, %A_MyDocuments%\Automation\
 	Sleep, 500
 	NeoDriver := ChromeGet()
@@ -32,22 +43,24 @@ neo_startWebDriver()
 
 	NeoCheck := true
 
-	Exit
+	return NeoDriver
 }
 
-; function to check that the NeoDriver is still open
-neo_stillOpen()
+neo_stillOpen() ; checks to see if a NeoDriver is bound, creates a new one if not
 {
 	global NeoDriver, NeoCheck
 
 	if (NeoCheck != true)
+	{
 		MsgBox, 4, Open NeoDriver?, No instance of NeoDriver found, initiate?
 			IfMsgBox, Yes
 				neo_startWebDriver()
 			IfMsgBox, No
 				Exit
+	}
 
-	try temp := InStr(NeoDriver.Url, "https://portal.rxwizard.com/cases/edit/")
+	try currentURL := NeoDriver.Url
+
 	catch e
 	{
 		MsgBox, 4, Webdriver Error, The tab for driving Portal.RXWizard was closed, initiate webdriver?
@@ -55,84 +68,77 @@ neo_stillOpen()
 				neo_startWebDriver()
 			IfMsgBox, No
 			{
-				Gui, Destroy
 				Exit
 			}
-		Gui, Destroy
-		return
+		return "https://portal.rxwizard.com/cases"
 	}
+	return currentURL
 }
 
-; function to bring NEOLab website to the front
-neo_activate()
+
+neo_activate(scanField) ; Bring the Chrome running RXWizard to the front, pop into scan field if requested
 {
+
+	Neo_StillOpen()
+
+	global NeoDriver, Path_ScanScriptCSS
+
 	if WinExist("New England Orthodontic Laboratory - Google Chrome")
+	{
 		WinActivate
+	}
 	else
 	{
 		MsgBox,, Website Error, RxWizard Portal should be the top tab in its own instance
 		exit
 	}
+
+	if (scanField = true)
+	{
+		if !InStr(NeoDriver.Url, "https://portal.rxwizard.com") ; Must be on a rxwizard page
+		{
+			Gui, Destroy
+			MsgBox,, Wrong Page, Must be on an RxWizard Page
+			Exit
+		}  
+
+		Send {tab}
+		Sleep, 100
+		NeoDriver.findElementByCss(Path_ScanScriptCSS).click()
+	}
 	return
 }
 
-; function for returning to the cases page and entering the search field
-neo_navigateToCases()
-{
-    global NeoDriver, Path_ScanScriptCSS
-
-	Neo_StillOpen()
-
-    if !InStr(NeoDriver.Url, "https://portal.rxwizard.com") ; Must be on a rxwizard page
-    {
-		Gui, Destroy
-        MsgBox,, Wrong Page, Must be on an RxWizard Page
-        Exit
-    }
-
-	Neo_Activate()
-
-	Send {tab}
-	Sleep, 100
-
-    NeoDriver.findElementByCss(Path_ScanScriptCSS).click()
-
-}
-
-; function for getting to the review page from the edit page
-neo_navigateReviewFromEdit()
+neo_swapPages(destPage) ; swaps between review and edit pages
 {
     global NeoDriver, Path_ReviewButtonCSS
 
-	Neo_StillOpen()
+	currentURL := Neo_StillOpen()
 
-	Neo_Activate()
+	Neo_Activate(scanField=false)
 
-	; If on the edit page, click on the "review" button on the bottom, then either wait for the review page or
-	; click the "confirm" button on the "over model count" popup.
-    if InStr(NeoDriver.Url, "https://portal.rxwizard.com/cases/edit/")
+	if (!InStr(currentURL, "/review/") and !InStr(currentURL, "/edit/"))
 	{
-        try NeoDriver.findElementByCss(Path_ReviewButtonCSS).sendKeys(Keys.RETURN)
-		catch e
-		{
-			MsgBox,, Couldn't Find Element, Couldn't find the "Review" button
-			Gui, Destroy
-			Exit
-		}
-
+		msgbox,, Wrong Page, Need to be on the review or edit page
+		Exit
 	}
-	else if InStr(NeoDriver.Url, "https://portal.rxwizard.com/cases/review/")
-		do = 0
-	else
-		MsgBox,, Wrong Page, Must be on the edit page for this function
-	return
 
+	if (destPage = "review" or (destPage = "swap" and InStr(currentURL, "/edit/")))
+	{
+		destURL := StrReplace(currentURL, "/edit/", "/review/")
+	}
+	else if (destPage = "edit" or (destPage = "swap" and InStr(currentURL, "/review/")))
+	{
+		destURL := StrReplace(currentURL, "/review/", "/edit/")
+	}
+
+	NeoDriver.Get(destURL)
+	return destURL
 }
 
-; function for hitting start/stop for %step% while already on the review page
-neo_start()
+neo_start(currentStep) ; hits the start button on the review page
 {
-	global NeoDriver, currentstep, currentstepxpath
+	global NeoDriver
 
 	if !InStr(NeoDriver.Url, "https://portal.rxwizard.com/cases/review/") ; checks to ensure on the review page
 	{
@@ -170,7 +176,7 @@ neo_start()
 			Exit
 		}
 
-		Neo_Activate()
+		Neo_Activate(scanField=false)
 
 		WinWaitActive, New England Orthodontic Laboratory - Google Chrome,, 10
 
@@ -187,10 +193,9 @@ neo_start()
 	return
 }
 
-; new function for stopping step, will replace the original
-neo_Stop()
+neo_Stop(currentStep) ; hits the stop button on the review page
 {
-	global NeoDriver, currentstep, currentstepxpath
+	global NeoDriver
 
 	; Wait until the button for pushing step is clickable
 	try new WebDriverWait(NeoDriver, 10).until(ExpectedConditions.element_to_be_clickable(By.CSS_SELECTOR, currentstepxpath))
@@ -218,7 +223,7 @@ neo_Stop()
 		{
 			NeoDriver.findElementByCss(currentstepxpath).Click
 
-			Neo_Activate()
+			Neo_Activate(scanField=false)
 
 			WinWaitActive, New England Orthodontic Laboratory - Google Chrome,, 10
 
@@ -274,19 +279,18 @@ neo_Stop()
 	return
 }
 
-; function to retrieve patient and clinic names from the edit page
-neo_getInfoFromReview()
+neo_getInfoFromReview() ; retrieves and returns patient info from review/edit pages
 {
     global NeoDriver, Path_ScriptNumberCSS, Path_ClinicNameCSS, Path_PatientNameCSS
 	Neo_StillOpen()
 
-	Neo_Activate()
+	Neo_Activate(scanField:=false)
 
-	patientInfo := {"scriptNumber": "4324", "panNumber": "", "engravingBarcode": "", "firstName": "", "lastName": "", "clinicName": ""}
+	patientInfo := {"scriptNumber": "", "panNumber": "", "engravingBarcode": "", "firstName": "", "lastName": "", "clinicName": ""}
 
-    if !InStr(NeoDriver.Url, "https://portal.rxwizard.com/cases/review/")
+    if !InStr(NeoDriver.Url, "https://portal.rxwizard.com/cases/review/") and !InStr(NeoDriver.Url, "https://portal.rxwizard.com/cases/edit/")
 	{
-        MsgBox Not on the review page
+        MsgBox Not on the review or edit page
 		Exit
 	}
 
@@ -325,50 +329,38 @@ neo_getInfoFromReview()
 neo_newNote(orderID)
 {
 	global NeoDriver, Path_NewNoteCSS
-	; Checks the URL to make sure it's on an edit page
 
 	Neo_StillOpen()
 
 	if !InStr(NeoDriver.Url, "https://portal.rxwizard.com/cases/review/")
 	{
 		MsgBox Must be on review page to use this function
-		Gui, Destroy
 		Exit
 	}
 
-	; New Note Button
 	try NeoDriver.findElementByCss(Path_NewNoteCSS).Click()
 	catch e
 	{
 		MsgBox,, Couldn't Find Element, Couldn't find the "new note" button
-		Gui, Destroy
 		Exit
 	}
 
 	BlockInput, MouseMove
-
 	Sleep, 200
 
-	; Dropdown for input type
-	try NeoDriver.findElementByID("note_type").Click()
+	try NeoDriver.findElementByID("note_type").Click() ; Dropdown for input type
 	catch e
 	{
 		BlockInput, MouseMoveOff
 		MsgBox,, Couldn't Find Element, Couldn't find the note type drop down
-		Gui, Destroy
 		Exit
 	}
 
 	Sleep, 200
-
-	; Select CSR
-	Send {enter}
-
+	Send {enter} ; Select CSR
 	Sleep, 300
 
-	; enter note field
-
-	try NeoDriver.findElementByID("note_text").Click()
+	try NeoDriver.findElementByID("note_text").Click() ; enter note field
 	catch e
 	{
 		BlockInput, MouseMoveOff
@@ -378,10 +370,44 @@ neo_newNote(orderID)
 	}
 
 	Sleep, 200
-
 	Send iTero ID: %orderID%
-
 	BlockInput, MouseMoveOff
 
+	Send {tab}{tab} ;tab to the save button, css path doesn't work anymore
+	Sleep, 200
+	Send {enter}
+
+	return
+}
+
+neo_uploadPic(screenshotDir) {
+	try NeoDriver.findElementByXpath(Path_UploadFileXPATH).Click()
+	catch e 
+	{
+		MsgBox,, Website Error, Couldn't find the file upload button on the website
+		Exit
+	}
+
+	WinWaitActive Open,, 5
+	if ErrorLevel 
+	{
+		MsgBox,, Website Error, File Upload window didn't open properly
+		Exit
+	}
+
+	Sleep, 100
+
+	Send % screenshotDir ; send the directory for the automation screencaps folder
+	Sleep, 200
+	Send {enter}
+	Sleep, 200
+
+	Send {shiftDown}{tab}{ShiftUp} ; tab into the main files window
+	Sleep, 100
+
+	Send {CtrlDown}a{CtrlUp} ; select all files
+	Sleep, 100
+
+	Send {enter} ; confirm
 	return
 }
