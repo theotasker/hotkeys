@@ -387,7 +387,6 @@ Ortho_takeBitePics(patientInfo) {
 			Exit
 		}
 
-	screenshotDir := A_MyDocuments "\Automation\Screenshots"
 	FileRemoveDir, %screenshotDir%, 1
 	FileCreateDir, %screenshotDir%
 
@@ -407,7 +406,7 @@ Ortho_takeBitePics(patientInfo) {
 
 	CaptureScreen(screenshotName "Right.jpg")
 
-	return screenshotName
+	return screenshotDir
 }
 
 ortho_sendText(to_send, target_box, target_window)
