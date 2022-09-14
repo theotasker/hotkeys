@@ -91,8 +91,6 @@ neo_activate(scanField) ; Bring the Chrome running RXWizard to the front, pop in
 			Exit
 		}  
 
-		msgbox it's here
-
 		Send {tab}
 		Sleep, 100
 		NeoDriver.findElementByCss(Path_ScanScriptCSS).click()
@@ -127,7 +125,7 @@ neo_swapPages(destPage) ; swaps between review and edit pages
 	return destURL
 }
 
-neo_start() ; hits the start button on the review page
+neo_start(currentStep) ; hits the start button on the review page
 {
 	global NeoDriver, currentstep, currentstepxpath
 
@@ -184,7 +182,7 @@ neo_start() ; hits the start button on the review page
 	return
 }
 
-neo_Stop() ; hits the stop button on the review page
+neo_Stop(currentStep) ; hits the stop button on the review page
 {
 	global NeoDriver, currentstep, currentstepxpath
 
@@ -275,7 +273,7 @@ neo_getInfoFromReview() ; retrieves and returns patient info from review/edit pa
     global NeoDriver, Path_ScriptNumberCSS, Path_ClinicNameCSS, Path_PatientNameCSS
 	Neo_StillOpen()
 
-	Neo_Activate(scanField=false)
+	Neo_Activate(scanField:=false)
 
 	patientInfo := {"scriptNumber": "", "panNumber": "", "engravingBarcode": "", "firstName": "", "lastName": "", "clinicName": ""}
 
@@ -363,6 +361,10 @@ neo_newNote(orderID)
 	Sleep, 200
 	Send iTero ID: %orderID%
 	BlockInput, MouseMoveOff
+
+	Send {tab}{tab} ;tab to the save button, css path doesn't work anymore
+	Sleep, 200
+	Send {enter}
 
 	return
 }

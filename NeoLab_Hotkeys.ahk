@@ -10,7 +10,7 @@
 CoordMode, Mouse, Client ; mouse and pixel coordinates will be based on the client, instead of screen or window. Most precise
 CoordMode, Pixel, Client
 
-#Include \\APP03\Scans\~Digital Dept Share\R&D Network\Scripting\AutoHotKey\Projects\CaptureScreen.ahk ; 3rd party library, must be in 32bit mode in AHK
+#Include D:\hotkeys\Libraries\CaptureScreen.ahk ; 3rd party library, must be in 32bit mode in AHK
 #Include D:\hotkeys\Web_Paths.ahk
 #Include D:\hotkeys\Libraries\Neo_Functions.ahk
 #Include D:\hotkeys\Libraries\Cadent_Functions.ahk
@@ -37,7 +37,6 @@ f2::
 	return
 }
 
-
 ; =========================================================================================================================
 ; RXWizard Shortcuts
 ; =========================================================================================================================
@@ -45,7 +44,7 @@ f2::
 
 f4:: ; place cursor in the search field in RXWizard for barcode scanning
 {
-    neo_activate(scanField:="test")
+    neo_activate(scanField:=True)
     return
 }
 
@@ -55,51 +54,17 @@ f5:: ; Swap between review and edit pages
 	return
 }
 
-; shortcut to hit start stop on a page, must be on review page.
-f6::
+f6:: ; hit start/stop button for case, must be on review or edit page
 {
-    global NeoDriver, currentstep, currentstepcss, currentstepxpath, ProgX, ProgY, StartStep, EndStep, Path_StartStopXPATH, Path_StartStopManagerXPATH, Path_GenerateScheduleCSS
+    neo_swapPages(destPage:="review")
 
-    Gui, Add, Progress, vprogress w300 h45
-	Gui, Show, w320 h25 %ProgX% %ProgY%, Script Running
-    Gui, +AlwaysOnTop
+	needStop := neo_start(currentStep:=currentStep)
 
-    if !InStr(NeoDriver.Url, "https://portal.rxwizard.com/cases/review/") ; must be on review page, or recieve error
-    {
-		Gui, Destroy
-        MsgBox,, Wrong Page, Must be on the review page for this function
-        Exit
-    }
-
-
-	GuiControl,, Progress, 33
-
-	; Current step variables
-	currentstep := StartStep
-
-
-
-	try NeoDriver.executeScript("window.scrollBy(0, 800)")
-	catch e
+	if (Needstop = True)
 	{
-		msgbox couldn't scroll
-		return
+		neo_stop(currentStep:=currentStep)
 	}
-
-	; calls Neo_ function to click the start button
-	neo_start()
-
-	GuiControl,, Progress, 66
-
-	currentstep := EndStep
-
-	; calls Neo_ function to click the stop button
-	neo_stop()
-
 	Sleep, 1000
-
-	GuiControl,, Progress, 100
-	Gui, Destroy
 
 	neo_activate(scanField:=true)
 
@@ -126,48 +91,40 @@ f8:: ; Create new patient if non exists, then create model set
 
 	ortho_createModelSet(patientInfo)
 
-	BlockInput, MouseMoveOff
 	return
 }
 
-; Function to be used on imported case field, loops around and deletes stls
-f9::
+f9:: ; for importing, returns to patient info and deletes temp STLs. for prepping, returns to patient info and exports STL 
 {
-	if Step = Importing
-	{
-
-		if !WinExist("OrthoAnalyzer. Patient ID:")
-		{
+	if currentStep = "importing" {
+		if !WinExist("OrthoAnalyzer. Patient ID:") {
 			MsgBox Must be in case view window in Ortho Analyzer for this function
 			Exit
 		}
-
 		SetTitleMatchMode, 1
 		WinActivate OrthoAnalyzer. Patient ID:
 		WinWaitActive OrthoAnalyzer. Patient ID:
 
 		quickClick("27", "43")
 
-		if FileExist(A_MyDocuments "\Temp Models\*.stl")
+		if FileExist(A_MyDocuments "\Temp Models\*.stl") {
 			Loop, 10
 				FileDelete, %A_MyDocuments%\Temp Models\*.stl
+		}
 	}
 
-	else if Step = Prepping
+	else if currentStep = "prepping"
 	{
-		if WinExist("ahk_group ThreeShape")
-		{
+		if WinExist("ahk_group ThreeShape") {
 			Ortho_Export()
 		}
-		else
-		{
+		else {
 			MsgBox,, Wrong Window, Must be in a case to use this function
 			Exit
 		}
 	}
 
-	else
-	{
+	else {
 		MsgBox,, Wrong Step, Must be on the importing or prepping step for this function
 	}
 
@@ -178,211 +135,27 @@ f9::
 ; OrthoCAD Shortcuts
 ; =========================================================================================================================
 
-; Shortcut to go to cadent search page and enter the patient name into fields
-f10::
+f10:: ; get patient info from RXWizard and search in myCadent
 {
-	Cadent_StillOpen()
-
 	patientInfo := neo_getInfoFromReview()
 
-    ;Progress Bar instance
-    Gui, Add, Progress, vprogress w300 h45
-	Gui, Show, w320 h25 %ProgX% %ProgY%, Script Running
-    Gui, +AlwaysOnTop
-
-    GuiControl,, Progress, 33
-
-    Cadent_Orders()
-
-    GuiControl,, Progress, 66
-
-    BlockInput, MouseMove
-
-    if StrLen(patientInfo["firstName"]) > 1 and StrLen(patientInfo["lastName"]) > 1
-	{
-        Send % patientInfo["lastName"]
-		Send ,{space}
-		Send % patientInfo["firstName"]
-	}
-
-    BlockInput, MouseMoveOff
-
-    GuiControl,, Progress, 100
-    Gui, Destroy
+    Cadent_ordersPage(patientInfo, patientSearch:=True)
 
 	return
 }
 
-; OrthoCad Export Hotkey
-f11::
+f11:: ; While on patient page in myCadent, export STL
 {
-	global MyCadentDriver, firstname, lastname, ProgX, ProgY
+	patientInfo := neo_getInfoFromReview()
 
-	Cadent_StillOpen()
+	currentURL := Cadent_StillOpen()
 
-	if !InStr(MyCadentDriver.Url, "https://mycadent.com/CaseInfo.aspx") ; checks to ensure on a case page
-	{
-		MsgBox,, Wrong Page, Must be on a case page in MyCadent
-		Gui, Destroy
-		Exit
-	}
+	Cadent_exportClick()
 
-	try MyCadentDriver.findElementByID(Path_CadentExport).click() ; click on the export button
-	catch e
-	{
-		Gui, Destroy
-		Msgbox,, Web Error, Couldn't click on the export button on MyCadent
-		Exit
-	}
+	exportFilename := Cadent_exportOrthoCAD(patientInfo)
 
-    Gui, Add, Progress, vprogress w300 h45
-	Gui, Show, w320 h25 %ProgX% %ProgY%, Script Running
-    Gui, +AlwaysOnTop
+	Cadent_moveSTLs(exportFilename)
 
-	BlockInput, MouseMove
-
-	SetTitleMatchMode, 1
-	WinWait, ahk_exe OrthoCAD.exe,, 30, Export  ; Wait for main window to open
-	if ErrorLevel
-		{
-			Gui, Destroy
-			BlockInput, MouseMoveOff
-			MsgBox,, OrthoCAD Error, Main OrthoCAD window didn't open
-			Exit
-		}
-
-	Sleep, 400 ; buffer for file to load
-	Cadent_Orders()
-
-	GuiControl,, Progress, 20
-
-	SetTitleMatchMode, 3
-	WinWait, OrthoCAD Export,, 30   ; Wait for export box to open
-	if ErrorLevel
-		{
-			Gui, Destroy
-			BlockInput, MouseMoveOff
-			MsgBox,, OrthoCAD Error, Export box didn't open
-			Exit
-		}
-
-	GuiControl,, Progress, 40
-
-    ; Activate orthocad, then the export window
-    WinActivate, ahk_exe OrthoCAD.exe
-    WinActivate, "OrthoCAD Export"
-
-    ; set the export type to open scan
-    ControlFocus, ComboBox1, OrthoCAD Export
-    Send, {down}
-    Sleep, 100
-
-    ; set the export type to models in occlusion
-    ControlFocus, ComboBox2, OrthoCAD Export
-    Send, {down}{down}
-    Sleep, 100
-
-    ; set the export folder to "export"
-    ControlFocus, Edit1, OrthoCAD Export
-    Send {CtrlDown}a{CtrlUp}
-    Sleep, 100
-    Send, %firstname%%lastname%
-    Sleep, 100
-
-    ; go to the export button and hit enter
-    Send, {tab}
-    Sleep, 100
-    Send, {enter}
-
-	GuiControl,, Progress, 60
-
-	SetTitleMatchMode, 3
-	WinWait, Export Done,, 30
-	if ErrorLevel
-		{
-			Gui, Destroy
-			BlockInput, MouseMoveOff
-			MsgBox,, OrthoCAD Error, Export confirmation box didn't open
-			Exit
-		}
-
-	WinActivate, Export Done
-	WinWaitActive, Export Done,, 30
-	if ErrorLevel
-		{
-			Gui, Destroy
-			BlockInput, MouseMoveOff
-			MsgBox,, OrthoCAD Error, Couldn't get focus on export confirmation box
-			Exit
-		}
-
-    Sleep, 100
-	ControlFocus, Button1, Export Done  ; decline to navigate to file location
-	Sleep, 300
-	Send, {tab}
-	Sleep, 100
-	Send, {enter}
-	Sleep, 100
-
-	GuiControl,, Progress, 80
-
-	WinKill, ahk_exe OrthoCAD.exe
-	Sleep, 200
-
-	SetTitleMatchMode, 2
-	if WinExist("ahk_class #32770")   ; confirm closing without saving
-	{
-		Send {tab}
-		sleep, 100
-		Send {enter}
-		Sleep, 200
-	}
-
-	WinWaitClose, ahk_exe OrthoCAD.exe,, 10
-	if ErrorLevel
-	{
-		Gui, Destroy
-		BlockInput, MouseMoveOff
-		MsgBox,, OrthoCAD Error, Couldn't close OrthoCAD
-		Exit
-	}
-
-	newfirst := StrReplace(firstname, " ", "")
-    newlast := StrReplace(lastname, " ", "")
-
-	IfNotExist, C:\Cadent\Export\
-		FileCreateDir, C:\Cadent\Export\
-
-	IfNotExist, %A_MyDocuments%\Temp Models
-		FileCreateDir, %A_MyDocuments%\Temp Models
-
-	IfNotExist, C:\Cadent\Export\%firstname%%lastname%
-		MsgBox Couldn't find export folder, didn't move files
-
-	if FileExist("C:\Cadent\Export\" newfirst newlast "\" "*u.stl")
-	{
-		FileMove, C:\Cadent\Export\%newfirst%%newlast%\*u.stl, %A_MyDocuments%\Temp Models\%newfirst%%newlast%upper.stl, 1
-		counter += 1
-	}
-
-	if FileExist("C:\Cadent\Export\" newfirst newlast "\" "*l.stl")
-	{
-		FileMove, C:\Cadent\Export\%newfirst%%newlast%\*l.stl, %A_MyDocuments%\Temp Models\%newfirst%%newlast%lower.stl, 1
-		counter += 1
-	}
-
-    if FileExist("C:\Cadent\Export\" newfirst newlast "\" "*.stl")
-	{
-		FileMove, C:\Cadent\Export\%newfirst%%newlast%\*.stl, %A_MyDocuments%\Temp Models\, 1
-		counter += 1
-	}
-
-    IfExist, C:\Cadent\Export\%newfirst%%newlast%
-        FileRemoveDir, C:\Cadent\Export\%newfirst%%newlast%, 1
-
-	GuiControl,, Progress, 100
-    Gui, Destroy
-	BlockInput, MouseMoveOff
     return
 }
 
@@ -616,73 +389,24 @@ BothABR:
 Insert::
 {
 
-	if Step = Importing ; On the importing step, grabs the iTero ID and inserts it into the notes field
+	if Step = Importing ; On the importing step, grabs the iTero ID and inserts it into a new note
 	{
-		Gui, Add, Progress, vprogress w300 h45
-		Gui, Show, w320 h25 %ProgX% %ProgY%, Script Running
-		Gui, +AlwaysOnTop
-
 		orderID := Cadent_GetOrderID()
-
-		GuiControl,, Progress, 10
 
 		Neo_Activate(scanField:=false)
 
-		GuiControl,, Progress, 20
-
 		Neo_NewNote(orderID)
 
-		GuiControl,, Progress, 75
-
-		;tab to the save button, css path doesn't work anymore
-		Send {tab}{tab}
-
-		Sleep, 200
-
-		Send {enter}
-
-		GuiControl,, Progress, 100
-		Gui, Destroy
-
+		return
 	}
 
 	else ; If on any other step, takes bite screenshots in ortho and uploads them to the website
 	{
-
-		; gets first and last name to be used in the screenshot filenames
-		neo_stillOpen()
 		patientInfo := neo_getInfoFromReview()
 
-		if !WinExist("ahk_group ThreeShape")
-		{
-			MsgBox,, Wrong Window, Case must be open in OrthoAnalyzer or ApplianceDesigner
-			Exit
-		}
+		Ortho_takeBitePics(patientInfo)
 
-		; defines directory and destroys and recreates it to ensure it's empty
-		dir= %A_MyDocuments%\Automation\Screenshots
-		FileRemoveDir, %dir%, 1
-		FileCreateDir, %dir%
-
-		Ortho_View(frontViewY, bottomViewY, topTick)
-
-		screenshotname := patientInfo["firstName"] patientInfo["lastName"] "Front.jpg"
-		Sleep, 500
-		CaptureScreen(screenshotname) ; function defined in CaptureScreen Library
-
-		Ortho_View(leftViewY, bottomViewY, topTick)
-
-		screenshotname := patientInfo["firstName"] patientInfo["lastName"] "Left.jpg"
-		Sleep, 500
-		CaptureScreen(screenshotname)
-
-		Ortho_View(rightViewY, bottomViewY, topTick)
-
-		screenshotname := patientInfo["firstName"] patientInfo["lastName"] "Right.jpg"
-		Sleep, 500
-		CaptureScreen(screenshotname)
-
-		Neo_Activate(scanField=false)
+		Neo_Activate(scanField:=false)
 
 		; tries to find the website button to upload files and click it
 		try NeoDriver.findElementByXpath(Path_UploadFileXPATH).Click()
