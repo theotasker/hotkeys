@@ -1,5 +1,13 @@
 NeoCheck := false
 
+ChromeGet(IP_Port := "127.0.0.1:9222") ; Don't Touch, attaches web driver to last opened tab
+	{
+		Driver := ComObjCreate("Selenium.ChromeDriver")
+		Driver.SetCapability("debuggerAddress", IP_Port)
+		Driver.Start()
+		return Driver
+	}
+
 neo_startWebDriver() ; closes existing Chromes and opens a new one, binds it to NeoDriver
 {
 	global
@@ -38,17 +46,18 @@ neo_startWebDriver() ; closes existing Chromes and opens a new one, binds it to 
 	return NeoDriver
 }
 
-
 neo_stillOpen() ; checks to see if a NeoDriver is bound, creates a new one if not
 {
 	global NeoDriver, NeoCheck
 
 	if (NeoCheck != true)
+	{
 		MsgBox, 4, Open NeoDriver?, No instance of NeoDriver found, initiate?
 			IfMsgBox, Yes
 				neo_startWebDriver()
 			IfMsgBox, No
 				Exit
+	}
 
 	try currentURL := NeoDriver.Url
 
@@ -75,7 +84,9 @@ neo_activate(scanField) ; Bring the Chrome running RXWizard to the front, pop in
 	global NeoDriver, Path_ScanScriptCSS
 
 	if WinExist("New England Orthodontic Laboratory - Google Chrome")
+	{
 		WinActivate
+	}
 	else
 	{
 		MsgBox,, Website Error, RxWizard Portal should be the top tab in its own instance
@@ -127,7 +138,7 @@ neo_swapPages(destPage) ; swaps between review and edit pages
 
 neo_start(currentStep) ; hits the start button on the review page
 {
-	global NeoDriver, currentstep, currentstepxpath
+	global NeoDriver
 
 	if !InStr(NeoDriver.Url, "https://portal.rxwizard.com/cases/review/") ; checks to ensure on the review page
 	{
@@ -184,7 +195,7 @@ neo_start(currentStep) ; hits the start button on the review page
 
 neo_Stop(currentStep) ; hits the stop button on the review page
 {
-	global NeoDriver, currentstep, currentstepxpath
+	global NeoDriver
 
 	; Wait until the button for pushing step is clickable
 	try new WebDriverWait(NeoDriver, 10).until(ExpectedConditions.element_to_be_clickable(By.CSS_SELECTOR, currentstepxpath))
@@ -366,5 +377,37 @@ neo_newNote(orderID)
 	Sleep, 200
 	Send {enter}
 
+	return
+}
+
+neo_uploadPic(screenshotDir) {
+	try NeoDriver.findElementByXpath(Path_UploadFileXPATH).Click()
+	catch e 
+	{
+		MsgBox,, Website Error, Couldn't find the file upload button on the website
+		Exit
+	}
+
+	WinWaitActive Open,, 5
+	if ErrorLevel 
+	{
+		MsgBox,, Website Error, File Upload window didn't open properly
+		Exit
+	}
+
+	Sleep, 100
+
+	Send % screenshotDir ; send the directory for the automation screencaps folder
+	Sleep, 200
+	Send {enter}
+	Sleep, 200
+
+	Send {shiftDown}{tab}{ShiftUp} ; tab into the main files window
+	Sleep, 100
+
+	Send {CtrlDown}a{CtrlUp} ; select all files
+	Sleep, 100
+
+	Send {enter} ; confirm
 	return
 }

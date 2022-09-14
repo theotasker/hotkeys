@@ -20,6 +20,15 @@ CoordMode, Pixel, Client
 SetBox() ; opens the settings box to select step
 
 ; ===========================================================================================================================
+; Directories
+; ===========================================================================================================================
+
+global autoImportDir := "D:\AutoImport\Input\"
+global tempModelsDir := A_MyDocuments "\Temp Models\"
+global screenshotDir := A_MyDocuments "\Automation\Screenshots"
+
+
+; ===========================================================================================================================
 ; Engraving shortcuts in Netfabb
 ; ===========================================================================================================================
 
@@ -31,7 +40,7 @@ f1::
 	return
 }
 
-f2::
+f2:: 
 {
 	Netfabb_finish()
 	return
@@ -44,29 +53,29 @@ f2::
 
 f4:: ; place cursor in the search field in RXWizard for barcode scanning
 {
-    neo_activate(scanField:=True)
+    Neo_activate(scanField:=True)
     return
 }
 
 f5:: ; Swap between review and edit pages
 {
-	neo_swapPages(destPage:="swap")
+	Neo_swapPages(destPage:="swap")
 	return
 }
 
 f6:: ; hit start/stop button for case, must be on review or edit page
 {
-    neo_swapPages(destPage:="review")
+    Neo_swapPages(destPage:="review")
 
-	needStop := neo_start(currentStep:=currentStep)
+	needStop := Neo_start(currentStep:=currentStep)
 
 	if (Needstop = True)
 	{
-		neo_stop(currentStep:=currentStep)
+		Neo_stop(currentStep:=currentStep)
 	}
 	Sleep, 1000
 
-	neo_activate(scanField:=true)
+	Neo_activate(scanField:=true)
 
 	return
 }
@@ -77,7 +86,7 @@ f6:: ; hit start/stop button for case, must be on review or edit page
 
 f7:: ; retrieve patient info from RXWizard and perform advanced search inside OrthoAnalyzer
 {
-	patientInfo := neo_getInfoFromReview()
+	patientInfo := Neo_getInfoFromReview()
 
 	Ortho_AdvSearch(patientInfo)
 
@@ -87,7 +96,7 @@ f7:: ; retrieve patient info from RXWizard and perform advanced search inside Or
 
 f8:: ; Create new patient if non exists, then create model set
 {
-	patientInfo := neo_getInfoFromReview()
+	patientInfo := Neo_getInfoFromReview()
 
 	ortho_createModelSet(patientInfo)
 
@@ -96,8 +105,10 @@ f8:: ; Create new patient if non exists, then create model set
 
 f9:: ; for importing, returns to patient info and deletes temp STLs. for prepping, returns to patient info and exports STL 
 {
-	if currentStep = "importing" {
-		if !WinExist("OrthoAnalyzer. Patient ID:") {
+	if currentStep = "importing" 
+	{
+		if !WinExist("OrthoAnalyzer. Patient ID:") 
+		{
 			MsgBox Must be in case view window in Ortho Analyzer for this function
 			Exit
 		}
@@ -107,7 +118,8 @@ f9:: ; for importing, returns to patient info and deletes temp STLs. for preppin
 
 		quickClick("27", "43")
 
-		if FileExist(A_MyDocuments "\Temp Models\*.stl") {
+		if FileExist(A_MyDocuments "\Temp Models\*.stl") 
+		{
 			Loop, 10
 				FileDelete, %A_MyDocuments%\Temp Models\*.stl
 		}
@@ -115,16 +127,19 @@ f9:: ; for importing, returns to patient info and deletes temp STLs. for preppin
 
 	else if currentStep = "prepping"
 	{
-		if WinExist("ahk_group ThreeShape") {
+		if WinExist("ahk_group ThreeShape") 
+		{
 			Ortho_Export()
 		}
-		else {
+		else 
+		{
 			MsgBox,, Wrong Window, Must be in a case to use this function
 			Exit
 		}
 	}
 
-	else {
+	else 
+	{
 		MsgBox,, Wrong Step, Must be on the importing or prepping step for this function
 	}
 
@@ -137,7 +152,7 @@ f9:: ; for importing, returns to patient info and deletes temp STLs. for preppin
 
 f10:: ; get patient info from RXWizard and search in myCadent
 {
-	patientInfo := neo_getInfoFromReview()
+	patientInfo := Neo_getInfoFromReview()
 
     Cadent_ordersPage(patientInfo, patientSearch:=True)
 
@@ -146,11 +161,11 @@ f10:: ; get patient info from RXWizard and search in myCadent
 
 f11:: ; While on patient page in myCadent, export STL
 {
-	patientInfo := neo_getInfoFromReview()
+	patientInfo := Neo_getInfoFromReview()
 
 	currentURL := Cadent_StillOpen()
 
-	Cadent_exportClick()
+	Cadent_exportClick(currentURL)
 
 	exportFilename := Cadent_exportOrthoCAD(patientInfo)
 
@@ -159,225 +174,21 @@ f11:: ; While on patient page in myCadent, export STL
     return
 }
 
-; Finish the orthocad export
-f12::
+f12:: ; renames arches in temp models folder, asks user for arch selection and auto vs manual importing, moves files
 {
-    if !FileExist(A_MyDocuments "\Temp Models\*.stl")
-	{
-		MsgBox,, Importing Finishing Error, No STLs in the Temp Models Folder
-		return
-	}
+	patientInfo := neo_getInfoFromReview()
 
-	Temp_Models_List := [] ; Array for listing files to pull from
-	Filename_Upper := ""  ; set these empty so the duplicate check works later
-	Filename_Lower := ""
+	existingArchFilenames := parseArches()
 
-	Loop Files, %A_MyDocuments%\Temp Models\*.stl ; Appends each file to the list
-		Temp_Models_List.Push(A_LoopFileName)
+	filenameBase := patientInfo["engravingBarcode"] "~" patientInfo["firstName"] "~" patientInfo["lastName"] "~" patientInfo["clinicName"] "~" patientInfo["scriptNumber"] "~"
+	filenameBase := StrReplace(filenameBase, " ", "_")
 
-	if(Temp_Models_List.Length() > 2)
-	{
-		MsgBox,, Importing finishing Error, Too many STLs in Temp Models folder
-		return
-	}
+	finishOptions := finishImportGUI(existingArchFilenames["arches"])
 
-	Tags_Upper := ["Upr.stl", "u.stl", "upper.stl", "max.stl", "Max.stl", "_u-"]
-	Tags_Lower := ["Lwr.stl", "l.stl", "lower.stl", "man.stl", "Man.stl", "_l-"]
+	finalizeSTLs(finishOptions, existingArchFilenames, filenameBase)
 
-	for key, filename in Temp_Models_List
-	{
-		Pass_check := 0
-		for key, tag in Tags_Upper ; all possible marking for an upper
-		{
-			if instr(filename, tag)
-			{
-				if (Filename_Upper != "")
-				{
-					msgbox,, Importing Finishing Error, found more than one upper STL in Temp Models folder
-					return
-				}
-				Filename_Upper := filename
-				Pass_check := 1
-			}
-		}
-		for key, tag in Tags_Lower ; all possible marking for an upper
-		{
-			if instr(filename, tag)
-			{
-				if (Filename_Lower != "")
-				{
-					msgbox,, Importing Finishing Error, found more than one lower STL in Temp Models folder
-					return
-				}
-				Filename_Lower := filename
-				Pass_check := 1
-			}
-		}
-		if (Pass_check = 0)
-		{
-			msgbox,, Importing Finishing Error, STLs must be labeled as upper or lower
-			return
-		}
-	}
+	msgbox,, Importing Complete, Successfully queued %filenameBase% for importing
 
-	neo_getInfoFromReview()
-
-	clinic := StrReplace(clinic, "#", "") ; Specifically for Boston Children's Hospital cases, hash messes with auto import
-
-	Filename_Base := firstname "~" lastname "~" StrReplace(clinic, " ", "_") "~" scriptnumber "~"
-
-	; These two ifs for single arches
-	if (Filename_Upper != "") and (Filename_Lower = "")
-	{
-		Gui, Add, Text, x30 y20 w300 h14 +Center, Normal Import:
-		Gui, Add, Button, x12 y40 w100 h30 gUpper, Upper
-
-		Gui, Add, Text, x30 y120 w300 h14 +Center, ABR Import:
-		Gui, Add, Button, x12 y140 w100 h30 gUpperABR, Upper ABR
-
-		Gui, Show, w439 h253, Import Type Selection (Upper Only)
-
-		WinWaitClose, Import Type Selection (Upper Only)
-
-		FileMove, %A_MyDocuments%\Temp Models\%Filename_Upper%, %Arch_Destination%%Filename_Base%Upr[1].stl
-		if !FileExist(Arch_Destination Filename_Base "Upr[1].stl")
-		{
-			Msgbox,, Importing Finishing Error, Attempted to move STL, but couldn't verify it's location after move
-			return
-		}
-	}
-	else if (Filename_Upper = "") and (Filename_Lower != "")
-	{
-		; GUI to select ABR vs normal import
-		Gui, Add, Text, x30 y20 w300 h14 +Center, Normal Import:
-		Gui, Add, Button, x112 y40 w100 h30 gLower, Lower
-
-		Gui, Add, Text, x30 y120 w300 h14 +Center, ABR Import:
-		Gui, Add, Button, x112 y140 w100 h30 gLowerABR, Lower ABR
-
-		Gui, Show, w439 h253, Import Type Selection (Lower Only)
-
-		WinWaitClose, Import Type Selection (Lower Only)
-
-
-		FileMove, %A_MyDocuments%\Temp Models\%Filename_Lower%, %Arch_Destination%%Filename_Base%Lwr[1].stl
-		if !FileExist(Arch_Destination Filename_Base "Lwr[1].stl")
-		{
-			Msgbox,, Importing Finishing Error, Attempted to move STL, but couldn't verify it's location after move
-			return
-		}
-	}
-
-	; This one for both arches, have to be able to choose which one or both
-	else if (Filename_Upper != "") and (Filename_Lower != "")
-	{
-		Gui, Add, Text, x30 y20 w300 h14 +Center, Normal Import:
-		Gui, Add, Button, x12 y40 w100 h30 gUpper, Upper
-		Gui, Add, Button, x112 y40 w100 h30 gLower, Lower
-		Gui, Add, Button, x212 y40 w100 h30 gBoth, Both
-
-		Gui, Add, Text, x30 y120 w300 h14 +Center, ABR Import:
-		Gui, Add, Button, x12 y140 w100 h30 gUpperABR, Upper ABR
-		Gui, Add, Button, x112 y140 w100 h30 gLowerABR, Lower ABR
-		Gui, Add, Button, x212 y140 w100 h30 gBothABR, Both ABR
-
-		Gui, Show, w439 h253, Arch Selection (Two Arches Detected)
-
-		WinWaitClose, Arch Selection (Two Arches Detected)
-
-		if (Arch_Finish = "Upper")
-		{
-			FileMove, %A_MyDocuments%\Temp Models\%Filename_Upper%, %Arch_Destination%%Filename_Base%Upr[1].stl
-			if !FileExist(Arch_Destination Filename_Base "Upr[1].stl")
-			{
-				Msgbox,, Importing Finishing Error, Attempted to move STL, but couldn't verify it's location after move
-				return
-			}
-			MsgBox,, Success, Upper arch added to importing queue
-		}
-		else if (Arch_Finish = "Lower")
-		{
-			FileMove, %A_MyDocuments%\Temp Models\%Filename_Lower%, %Arch_Destination%%Filename_Base%Lwr[1].stl
-			if !FileExist(Arch_Destination Filename_Base "Lwr[1].stl")
-			{
-				Msgbox,, Importing Finishing Error, Attempted to move STL, but couldn't verify it's location after move
-				return
-			}
-		}
-		else if (Arch_Finish = "Both")
-		{
-			FileMove, %A_MyDocuments%\Temp Models\%Filename_Upper%, %Arch_Destination%%Filename_Base%Upr[2].stl
-			FileMove, %A_MyDocuments%\Temp Models\%Filename_Lower%, %Arch_Destination%%Filename_Base%Lwr[2].stl
-
-			if !FileExist(Arch_Destination Filename_Base "Upr[2].stl") or !FileExist(Arch_Destination Filename_Base "Lwr[2].stl")
-			{
-				Msgbox,, Importing Finishing Error, Attempted to move STL, but couldn't verify it's location after move
-				return
-			}
-		}
-
-	}
-
-	else
-	{
-		msgbox no files were found for finishing
-		return
-	}
-
-	if FileExist(A_MyDocuments "\Temp Models\*.stl")
-			Loop, 10
-				FileDelete, %A_MyDocuments%\Temp Models\*.stl
-
-	msgbox,, Importing Complete, Successfully queued %Filename_Base% for importing
-
-	return
-}
-
-Upper:
-{
-	Arch_Finish := "Upper"
-	Arch_Destination := Import_Input_Dir
-	Gui, Destroy
-	return
-}
-
-Lower:
-{
-	Arch_Finish := "Lower"
-	Arch_Destination := Import_Input_Dir
-	Gui, Destroy
-	return
-}
-
-Both:
-{
-	Arch_Finish := "Both"
-	Arch_Destination := Import_Input_Dir
-	Gui, Destroy
-	return
-}
-
-UpperABR:
-{
-	Arch_Finish := "Upper"
-	Arch_Destination := ABR_Input_Dir
-	Gui, Destroy
-	return
-}
-
-LowerABR:
-{
-	Arch_Finish := "Lower"
-	Arch_Destination := ABR_Input_Dir
-	Gui, Destroy
-	return
-}
-
-BothABR:
-{
-	Arch_Finish := "Both"
-	Arch_Destination := ABR_Input_Dir
-	Gui, Destroy
 	return
 }
 
@@ -385,11 +196,9 @@ BothABR:
 ; Multi Site/Extra functions
 ; =========================================================================================================================
 
-; Insert the order ID from iTero into a new note on the edit page, or take bite pic if prepping
 Insert::
 {
-
-	if Step = Importing ; On the importing step, grabs the iTero ID and inserts it into a new note
+	if (Step = Importing) ; On the importing step, grabs the iTero ID and inserts it into a new note
 	{
 		orderID := Cadent_GetOrderID()
 
@@ -402,46 +211,16 @@ Insert::
 
 	else ; If on any other step, takes bite screenshots in ortho and uploads them to the website
 	{
-		patientInfo := neo_getInfoFromReview()
+		patientInfo := Neo_getInfoFromReview()
 
-		Ortho_takeBitePics(patientInfo)
+		screenshotDir := Ortho_takeBitePics(patientInfo)
 
 		Neo_Activate(scanField:=false)
 
-		; tries to find the website button to upload files and click it
-		try NeoDriver.findElementByXpath(Path_UploadFileXPATH).Click()
-		catch e
-		{
-			MsgBox,, Website Error, Couldn't find the file upload button on the website
-			Exit
-		}
+		Neo_uploadPic(screenshotDir)
 
-		WinWaitActive Open,, 5
-		if ErrorLevel
-		{
-			MsgBox,, Website Error, File Upload window didn't open properly
-			Exit
-		}
-
-		Sleep, 100
-
-		Send % dir ; send the directory for the automation screencaps folder
-		Sleep, 200
-
-		Send {enter}
-		Sleep, 200
-
-		Send {shiftDown}{tab}{ShiftUp} ; tab into the main files window
-		Sleep, 100
-
-		Send {CtrlDown}a{CtrlUp} ; select all files
-		Sleep, 100
-
-		Send {enter} ; confirm
+		return
 	}
-
-
-    return
 }
 
 ; ===========================================================================================================================
@@ -469,7 +248,7 @@ SettitleMatchMode, 1
 	return
 }
 
-!+c:: ; Transparency
+!+c::  ; Transparency
 {
 	Ortho_View(transparencyY, transparencyY, topTick)
 	return
@@ -531,8 +310,10 @@ SettitleMatchMode, 1
 !+a::
 {
 	ControlGetText, PrepStep, TdfInfoCaption2, ahk_group ThreeShape
-	if PrepStep not in Sculpt Maxillary,Sculpt Mandibular
+	if PrepStep not in Sculpt Maxillary,Sculpt Mandibular 
+	{
 		return
+	}
 
 	WinActivate ahk_group ThreeShape
 	quickClick(artifactX, artifactY)
@@ -543,8 +324,10 @@ SettitleMatchMode, 1
 !+p::
 {
 	ControlGetText, PrepStep, TdfInfoCaption2, ahk_group ThreeShape
-	if PrepStep not in Sculpt Maxillary,Sculpt Mandibular
+	if PrepStep not in Sculpt Maxillary,Sculpt Mandibular 
+	{
 		return
+	}
 
 	WinActivate ahk_group ThreeShape
 	quickClick(planeCutX, planeCutY)
@@ -555,8 +338,10 @@ SettitleMatchMode, 1
 !+s::
 {
 	ControlGetText, PrepStep, TdfInfoCaption2, ahk_group ThreeShape
-	if PrepStep not in Sculpt Maxillary,Sculpt Mandibular
+	if PrepStep not in Sculpt Maxillary,Sculpt Mandibular 
+	{
 		return
+	}
 
 	WinActivate ahk_group ThreeShape
 	quickClick(splineCutX, splineCutY)
@@ -578,43 +363,118 @@ quickClick(xCoord, yCoord)
 	return
 }
 
+; =========================================================================================================================
+; Extra Functions
+; =========================================================================================================================
 
-; ==========================================================================================================================
-; Web Library, all website subfunctions live here
-; ==========================================================================================================================
-
-; Don't Touch, attaches web driver to last opened tab
-ChromeGet(IP_Port := "127.0.0.1:9222")
+parseArches() {
+    if !FileExist(tempModelsDir "*.stl")
 	{
-		Driver := ComObjCreate("Selenium.ChromeDriver")
-		Driver.SetCapability("debuggerAddress", IP_Port)
-		Driver.Start()
-		return Driver
+		MsgBox,, Importing Finishing Error, No STLs in the Temp Models Folder
+		return
 	}
 
-; =========================================================================================================================
-; bindings for selecting model to import
-; =========================================================================================================================
+	tempModelList := []  ; list of all STLs in temp models folder
+	Loop Files, %tempModelsDir%*.stl 
+		tempModelList.Push(A_LoopFileName)
 
-#IfWinActive Arch Selection
+	if(tempModelList.Length() > 2)
+	{
+		MsgBox,, Importing finishing Error, Too many STLs in Temp Models folder
+		return
+	}
 
-Up::
-{
-	gosub Upper
-	return
+	tagsUpper := ["Upr.stl", "u.stl", "upper.stl", "max.stl", "Max.stl", "_u-"]
+	tagsLower := ["Lwr.stl", "l.stl", "lower.stl", "man.stl", "Man.stl", "_l-"]
+
+    archFilenames := {"arches":False, "upper":False, "lower":False}
+	for key, filename in tempModelList  ; for each stl in temp folder
+	{
+		tagCheck := False
+		for key, tag in tagsUpper ; check against upper tags
+		{
+			if instr(filename, tag) ; if the filename has an upper tag
+			{
+				if (archFilenames["upper"] != False)  ; if there's already an upper saved
+				{
+					msgbox,, Importing Finishing Error, found more than one upper STL in Temp Models folder
+					return
+				}
+				archFilenames["upper"] := filename ; otherwise, assign it to the upper
+				tagCheck := True
+			}
+		}
+		for key, tag in tagsLower
+		{
+			if instr(filename, tag)
+			{
+				if (archFilenames["lower"] != False)
+				{
+					msgbox,, Importing Finishing Error, found more than one lower STL in Temp Models folder
+					return
+				}
+				archFilenames["lower"] := filename
+				tagCheck := True
+			}
+		}
+	}
+
+	if (tagCheck := False)
+	{
+		msgbox,, Importing Finishing Error, STLs must be labeled as upper or lower
+        return
+	}
+
+    if ((archFilenames["upper"] != False) and (archFilenames["lower"] != False))
+    {
+        archFilenames["arches"] := "both"
+    }
+    else if (archFilenames["upper"] != False)
+    {
+        archFilenames["arches"] := "upper"
+    }
+    else if (archFilenames["lower"] != False)
+    {
+        archFilenames["arches"] := "lower"
+    }
+
+    return archFilenames
 }
 
-Down::
-{
-	gosub Lower
-	return
+finalizeSTLs(finishOptions, existingArchFilenames, filenameBase) {
+    if (finishOptions["arches"] = "both")
+    {
+        filenameTag := "[2].stl"
+    }
+    Else
+    {
+        filenameTag := "[1].stl"
+    }
+
+    if (finishOptions["auto"] = True)
+    {
+        destinationDir := autoImportDir
+    }
+    Else
+    {
+        destinationDir := tempModelsDir
+    }
+
+    if (finishOptions["upper"] = True)
+    {
+        currentFullFilename := tempModelsDir existingArchFilenames["upper"]
+        destFullFilename := destinationDir filenameBase "Upr" filenameTag
+        FileMove, %currentFullFilename%, %destFullFilename%
+    }
+    if (finishOptions["lower"] = True)
+    {
+        currentFullFilename := tempModelsDir existingArchFilenames["lower"]
+        destFullFilename := destinationDir filenameBase "Lwr" filenameTag
+        FileMove, %currentFullFilename%, %destFullFilename%
+    }
+    return
 }
 
-Right::
-{
-	gosub Both
-	return
-}
 
 ; =========================================================================================================================
 ; GIF easter egg
