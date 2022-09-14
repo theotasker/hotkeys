@@ -2,18 +2,27 @@
 CoordMode, Mouse, Client
 CoordMode, Pixel, Client
 
-#NoEnv
-
-currentURL := "https://portal.rxwizard.com/cases/review/486639"
+currentURL := "https://portal.rxwizard.com/cases/edit/486689"
 
 
-if (!InStr(currentURL, "/review/") and !InStr(currentURL, "/edit/"))
+testMe(destPage)
 {
-    msgbox % currentURL
-    msgbox,, Wrong Page, Need to be on the review or edit page
-    Exit
+    msgbox % destPage
+
+    if (destPage = "review" or (destPage = "swap" and InStr(currentURL, "/edit/")))
+    {
+        destURL = StrReplace(currentURL, "/edit/", "/review/")
+    }
+    else if (destPage = "edit" or (destPage = "swap" and InStr(currentURL, "/review/")))
+    {
+        destURL = StrReplace(currentURL, "/review/", "/edit/")
+    }
+    Else
+    {
+        msgbox faaail 
+        exit
+    }
+
 }
-Else
-{
-    msgbox all good
-}
+
+testMe(destPage:="review")

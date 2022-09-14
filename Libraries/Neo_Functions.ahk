@@ -69,6 +69,9 @@ neo_stillOpen() ; checks to see if a NeoDriver is bound, creates a new one if no
 
 neo_activate(scanField) ; Bring the Chrome running RXWizard to the front, pop into scan field if requested
 {
+
+	Neo_StillOpen()
+
 	global NeoDriver, Path_ScanScriptCSS
 
 	if WinExist("New England Orthodontic Laboratory - Google Chrome")
@@ -79,16 +82,16 @@ neo_activate(scanField) ; Bring the Chrome running RXWizard to the front, pop in
 		exit
 	}
 
-	if scanField
+	if (scanField = true)
 	{
-		Neo_StillOpen()
-
 		if !InStr(NeoDriver.Url, "https://portal.rxwizard.com") ; Must be on a rxwizard page
 		{
 			Gui, Destroy
 			MsgBox,, Wrong Page, Must be on an RxWizard Page
 			Exit
-		}
+		}  
+
+		msgbox it's here
 
 		Send {tab}
 		Sleep, 100
@@ -96,7 +99,6 @@ neo_activate(scanField) ; Bring the Chrome running RXWizard to the front, pop in
 	}
 	return
 }
-
 
 neo_swapPages(destPage) ; swaps between review and edit pages
 {
@@ -114,13 +116,12 @@ neo_swapPages(destPage) ; swaps between review and edit pages
 
 	if (destPage = "review" or (destPage = "swap" and InStr(currentURL, "/edit/")))
 	{
-		destURL = StrReplace(currentURL, "/edit/", "/review/")
+		destURL := StrReplace(currentURL, "/edit/", "/review/")
 	}
 	else if (destPage = "edit" or (destPage = "swap" and InStr(currentURL, "/review/")))
 	{
-		destURL = StrReplace(currentURL, "/review/", "/edit/")
+		destURL := StrReplace(currentURL, "/review/", "/edit/")
 	}
-	else
 
 	NeoDriver.Get(destURL)
 	return destURL

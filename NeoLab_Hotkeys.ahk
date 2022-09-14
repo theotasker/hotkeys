@@ -45,15 +45,13 @@ f2::
 
 f4:: ; place cursor in the search field in RXWizard for barcode scanning
 {
-    neo_activate(scanField=true)
+    neo_activate(scanField:="test")
     return
 }
 
 f5:: ; Swap between review and edit pages
 {
-
-	neo_swapPages(destPage="swap")
-
+	neo_swapPages(destPage:="swap")
 	return
 }
 
@@ -103,7 +101,7 @@ f6::
 	GuiControl,, Progress, 100
 	Gui, Destroy
 
-	neo_activate(scanField=true)
+	neo_activate(scanField:=true)
 
 	return
 }
@@ -628,7 +626,7 @@ Insert::
 
 		GuiControl,, Progress, 10
 
-		Neo_Activate(scanField=false)
+		Neo_Activate(scanField:=false)
 
 		GuiControl,, Progress, 20
 
