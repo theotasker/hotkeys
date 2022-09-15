@@ -361,19 +361,11 @@ neo_getPatientInfo() ; retrieves and returns patient info from review/edit pages
 		MsgBox, couldn't find clinic name
 		Exit
 	}
-	
+
 	patientInitials := SubStr(patientInfo["firstName"], 1, 1) SubStr(patientInfo["lastName"], 1, 1)
 	patientInfo["engravingBarcode"] := StrSplit(patientInfo["scriptNumber"], "-")[2] "-" patientInitials "-" patientInfo["panNumber"]
 
     return patientInfo
-}
-
-neo_getRawInfo(webPaths)
-{
-	global NeoDriver
-	
-
-	Return patientInfo
 }
 
 neo_newNote(orderID) ; Puts new note onto the edit page
