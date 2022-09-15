@@ -5,6 +5,26 @@
 ; ---------------------------------------------------------------------------------------------------------------------
 ; RXWizard Paths
 
+
+global reviewPageCSS := {"":""
+, "generateSchedule": "#main-content-wrapper > div.page-content > main > div.card > div > div:nth-child(1) > button:nth-child(1)"
+, "startStop": "#main-content-wrapper > div.page-content > main > div.card > div > div:nth-child(1) > button"
+, "scanScript": "#react > section > header > form > div > input"
+, "panNumber": "#main-content-wrapper > div.page-content > div > div.name > div > span.pan > div > span"
+, "scriptNumber": "#main-content-wrapper > div.page-content > div > div.name > div > span.case-name"
+, "clinicName": "#main-content-wrapper > div.page-content > main > div.ant-row > div:nth-child(1) > div.card > div > div:nth-child(1) > div.ant-col.ant-col-17 > div > div"
+, "patientName": "#main-content-wrapper > div.page-content > main > div.ant-row > div:nth-child(1) > div.card > div > div:nth-child(8) > div.ant-col.ant-col-17 > div > div"
+, "newNote": ""}
+
+global editPageCSS := {"":""
+, "scanScript": "#react > section > header > form > div > input"
+, "panNumber": "#pan > div > div > div.ant-select-selection-selected-value"
+, "scriptNumber": "#main-content-wrapper > div > div > div.name > div > span.case-name"
+, "clinicName": "#office > div > div > div.ant-select-selection-selected-value"
+, "patientFirstName": "#patient_first_name"
+, "patientLastName": "#patient_last_name"
+, "newNote": ""}
+
 global Path_GenerateScheduleCSS := "#main-content-wrapper > div.page-content > main > div.card > div > div:nth-child(1) > button:nth-child(1)"
 
 global Path_StartStopXPATH := "//*[@id=""""main-content-wrapper""""]/div[1]/main/div[2]/div/div[1]/button/span"
@@ -21,6 +41,10 @@ global Path_UploadFileXPATH := "//*[@id=""""main-content-wrapper""""]/div[1]/mai
 global Path_ScanScriptCSS := "#react > section > header > form > div > input"
 
 global Path_ReviewButtonCSS := "#main-content-wrapper > div > main > form > div.ant-row-flex.ant-row-flex-end > div:nth-child(2) > button"
+
+global Path_ReviewPanNumberCSS := "#main-content-wrapper > div.page-content > div > div.name > div > span.pan > div > span"
+
+global Path_ReviewPanNumberXPATH := "//*[@id=""main-content-wrapper""]/div[1]/div/div[1]/div/span[4]/div/span/text()"
 
 global Path_ScriptNumberCSS := "#main-content-wrapper > div.page-content > div > div.name > div > span.case-name"
 

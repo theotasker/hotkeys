@@ -279,54 +279,104 @@ neo_Stop(currentStep) ; hits the stop button on the review page
 	return
 }
 
-neo_getInfoFromReview() ; retrieves and returns patient info from review/edit pages
+neo_getPatientInfo() ; retrieves and returns patient info from review/edit pages
 {
-    global NeoDriver, Path_ScriptNumberCSS, Path_ClinicNameCSS, Path_PatientNameCSS
+    global NeoDriver
 	Neo_StillOpen()
 
 	Neo_Activate(scanField:=false)
 
-	patientInfo := {"scriptNumber": "", "panNumber": "", "engravingBarcode": "", "firstName": "", "lastName": "", "clinicName": ""}
+	currentURL := NeoDriver.Url
 
-    if !InStr(NeoDriver.Url, "https://portal.rxwizard.com/cases/review/") and !InStr(NeoDriver.Url, "https://portal.rxwizard.com/cases/edit/")
+    if !InStr(currentURL, "https://portal.rxwizard.com/cases/review/") and !InStr(currentURL, "https://portal.rxwizard.com/cases/edit/")
 	{
         MsgBox Not on the review or edit page
 		Exit
 	}
 
-	; get the script from the top of the review page
-	try patientInfo["scriptNumber"] := NeoDriver.findElementByCss(Path_ScriptNumberCSS).Attribute("innerText")
-	catch e
-		MsgBox Couldn't find the script number
+	patientInfo := {"scriptNumber": "", "panNumber": "", "engravingBarcode": "", "firstName": "", "lastName": "", "fullName": "", "clinicName": ""}
 
+
+	if InStr(currentURL, "https://portal.rxwizard.com/cases/review/")
+	{
+		webPaths := reviewPageCSS
+		try patientInfo["fullName"] := NeoDriver.findElementByCss(webPaths["patientName"]).Attribute("innerText")
+		catch e
+		{
+			MsgBox, couldn't find patient name
+			Exit
+		}
+
+		invalidchars := ["...", "..", ".", ",", "'"] ; take invalid characters out of the names
+		for item in invalidchars
+		{
+			patientInfo["fullName"] := StrReplace(patientInfo["fullName"], invalidchars[item], "")
+		}
+
+		patientInfo["firstName"] := StrSplit(patientInfo["fullName"], " ")[1]
+		patientInfo["lastName"] := StrReplace(patientInfo["fullName"], patientInfo["firstName"] " ", "")
+
+	}
+	Else
+	{
+		webPaths := editPageCSS
+		try
+		{
+			patientInfo["firstName"] := NeoDriver.findElementByCss(webPaths["patientFirstName"]).Attribute("value")
+			patientInfo["lastName"] := NeoDriver.findElementByCss(webPaths["patientLastName"]).Attribute("value")
+		}
+		catch e
+		{
+			MsgBox, couldn't find patient name
+			Exit
+		}
+
+		invalidchars := ["...", "..", ".", ",", "'"] ; take invalid characters out of the names
+		for item in invalidchars
+		{
+			patientInfo["firstName"] := StrReplace(patientInfo["firstName"], invalidchars[item], "")
+			patientInfo["lastName"] := StrReplace(patientInfo["lastName"], invalidchars[item], "")
+		}
+
+		patientInfo["fullName"] := patientInfo["firstName"] " " patientInfo["lastName"]
+	}
+
+	try patientInfo["panNumber"] := NeoDriver.findElementByCss(webPaths["panNumber"]).Attribute("innerText")
+	catch e
+	{
+		MsgBox Couldn't find the pan number
+	}
+	patientInfo["panNumber"] := StrReplace(patientInfo["panNumber"], " ", "")
+
+	try patientInfo["scriptNumber"] := NeoDriver.findElementByCss(webPaths["scriptNumber"]).Attribute("innerText")
+	catch e
+	{
+		MsgBox Couldn't find the script number
+	}
 	patientInfo["scriptNumber"] := StrReplace(patientInfo["scriptNumber"], "Case ")
 
-	; attempt to get the first, last, and clinic.
-	try
-	{
-		fullname := NeoDriver.findElementByCss(Path_PatientNameCSS).Attribute("innerText")
-		patientInfo["clinicName"] := NeoDriver.findElementByCss(Path_ClinicNameCSS).Attribute("innerText")
-	}
+	try patientInfo["clinicName"] := NeoDriver.findElementByCss(webPaths["clinicName"]).Attribute("innerText")
 	catch e
 	{
-		MsgBox, couldn't find patient or clinic name
-		Gui, Destroy
+		MsgBox, couldn't find clinic name
 		Exit
 	}
-
-	; take invalid characters out of the names
-	invalidchars := ["...", "..", ".", ",", "'"]
-	for item in invalidchars
-		fullname := StrReplace(fullname, invalidchars[item], "")
-
-	patientInfo["firstName"] := StrSplit(fullname, " ")[1]
-	patientInfo["lastName"] := StrReplace(fullname, patientInfo["firstName"] " ", "")
+	
+	patientInitials := SubStr(patientInfo["firstName"], 1, 1) SubStr(patientInfo["lastName"], 1, 1)
+	patientInfo["engravingBarcode"] := StrSplit(patientInfo["scriptNumber"], "-")[2] "-" patientInitials "-" patientInfo["panNumber"]
 
     return patientInfo
 }
 
-; Puts new note onto the edit page
-neo_newNote(orderID)
+neo_getRawInfo(webPaths)
+{
+	global NeoDriver
+	
+
+	Return patientInfo
+}
+
+neo_newNote(orderID) ; Puts new note onto the edit page
 {
 	global NeoDriver, Path_NewNoteCSS
 

@@ -86,7 +86,7 @@ f6:: ; hit start/stop button for case, must be on review or edit page
 
 f7:: ; retrieve patient info from RXWizard and perform advanced search inside OrthoAnalyzer
 {
-	patientInfo := Neo_getInfoFromReview()
+	patientInfo := neo_getPatientInfo()
 
 	Ortho_AdvSearch(patientInfo)
 
@@ -96,7 +96,7 @@ f7:: ; retrieve patient info from RXWizard and perform advanced search inside Or
 
 f8:: ; Create new patient if non exists, then create model set
 {
-	patientInfo := Neo_getInfoFromReview()
+	patientInfo := neo_getPatientInfo()
 
 	ortho_createModelSet(patientInfo)
 
@@ -152,7 +152,9 @@ f9:: ; for importing, returns to patient info and deletes temp STLs. for preppin
 
 f10:: ; get patient info from RXWizard and search in myCadent
 {
-	patientInfo := Neo_getInfoFromReview()
+	Cadent_StillOpen()
+	
+	patientInfo := neo_getPatientInfo()
 
     Cadent_ordersPage(patientInfo, patientSearch:=True)
 
@@ -161,7 +163,7 @@ f10:: ; get patient info from RXWizard and search in myCadent
 
 f11:: ; While on patient page in myCadent, export STL
 {
-	patientInfo := Neo_getInfoFromReview()
+	patientInfo := neo_getPatientInfo()
 
 	currentURL := Cadent_StillOpen()
 
@@ -176,7 +178,7 @@ f11:: ; While on patient page in myCadent, export STL
 
 f12:: ; renames arches in temp models folder, asks user for arch selection and auto vs manual importing, moves files
 {
-	patientInfo := neo_getInfoFromReview()
+	patientInfo := neo_getPatientInfo()
 
 	existingArchFilenames := parseArches()
 
@@ -209,7 +211,7 @@ Insert::
 
 	else ; If on any other step, takes bite screenshots in ortho and uploads them to the website
 	{
-		patientInfo := Neo_getInfoFromReview()
+		patientInfo := neo_getPatientInfo()
 
 		screenshotDir := Ortho_takeBitePics(patientInfo)
 
