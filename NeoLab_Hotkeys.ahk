@@ -46,6 +46,11 @@ f2::
 	return
 }
 
+f3:: 
+{
+	return
+}
+
 ; =========================================================================================================================
 ; RXWizard Shortcuts
 ; =========================================================================================================================
@@ -90,7 +95,6 @@ f7:: ; retrieve patient info from RXWizard and perform advanced search inside Or
 
 	Ortho_AdvSearch(patientInfo)
 
-	BlockInput, MouseMoveOff
     return
 }
 
