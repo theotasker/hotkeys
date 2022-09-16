@@ -48,6 +48,16 @@ f2::
 
 f3:: 
 {
+
+	Driver := ComObjCreate("Selenium.ChromeDriver")
+	Driver.SetCapability("debuggerAddress", "127.0.0.1:9222")
+	Driver.Start()
+
+
+	Driver.Get("google.com")
+
+
+
 	return
 }
 
@@ -156,7 +166,10 @@ f9:: ; for importing, returns to patient info and deletes temp STLs. for preppin
 
 f10:: ; get patient info from RXWizard and search in myCadent
 {
-	Cadent_StillOpen()
+	if !Cadent_StillOpen()
+	{
+		return
+	}
 	
 	patientInfo := neo_getPatientInfo()
 

@@ -1,14 +1,15 @@
 #SingleInstance Force
 CoordMode, Mouse, Client
 CoordMode, Pixel, Client
+msgbox done
 
-global testMe := {"":""
-, "greatings": "rightous"
-, "reawdwa":"dwijdijwdj"}
+Driver := ComObjCreate("Selenium.ChromeDriver")
+Driver.SetCapability("debuggerAddress", "127.0.0.1:9222")
+Driver.Start()
 
-running()
-{
-    msgbox % testMe["greatings"]
-}
 
-running()
+
+
+; Driver.Get("google.com")
+
+msgbox done

@@ -3,6 +3,7 @@
 ; =========================================================================================================================
 
 global NeoCheck := false
+global NeoDriver := ""
 global chromeShortcutDir := A_MyDocuments "\Automation\"
 
 ChromeGet(IP_Port := "127.0.0.1:9222") ; attaches web driver to last opened tab
@@ -15,8 +16,6 @@ ChromeGet(IP_Port := "127.0.0.1:9222") ; attaches web driver to last opened tab
 
 neo_startWebDriver() ; closes existing Chromes and opens a new one, binds it to NeoDriver
 {
-	global
-
 	if WinExist("ahk_exe chrome.exe")
 		MsgBox, 4, Close Chrome?, Close all current instances of Chrome? (suggested)
 			IfMsgBox, Yes
@@ -42,18 +41,18 @@ neo_startWebDriver() ; closes existing Chromes and opens a new one, binds it to 
 
 	Run, ChromeForAHK.lnk, %chromeShortcutDir%
 	Sleep, 500
-	NeoDriver := ChromeGet()
+	global NeoDriver := ChromeGet()
 	NeoDriver.Get("https://portal.rxwizard.com/cases")
 
 	NeoCheck := true
 
-	return NeoDriver
+	currentURL := NeoDriver.Url
+
+	return
 }
 
 neo_stillOpen() ; checks to see if a NeoDriver is bound, creates a new one if not
 {
-	global NeoDriver, NeoCheck
-
 	if (NeoCheck != true)
 	{
 		MsgBox, 4, Open NeoDriver?, No instance of NeoDriver found, initiate?
@@ -64,7 +63,6 @@ neo_stillOpen() ; checks to see if a NeoDriver is bound, creates a new one if no
 	}
 
 	try currentURL := NeoDriver.Url
-
 	catch e
 	{
 		MsgBox, 4, Webdriver Error, The tab for driving Portal.RXWizard was closed, initiate webdriver?
@@ -76,16 +74,14 @@ neo_stillOpen() ; checks to see if a NeoDriver is bound, creates a new one if no
 			}
 		return "https://portal.rxwizard.com/cases"
 	}
+
 	return currentURL
 }
 
 
 neo_activate(scanField) ; Bring the Chrome running RXWizard to the front, pop into scan field if requested
 {
-
-	Neo_StillOpen()
-
-	global NeoDriver
+	currentURL := Neo_StillOpen()
 
 	if WinExist("New England Orthodontic Laboratory - Google Chrome")
 	{
@@ -99,7 +95,7 @@ neo_activate(scanField) ; Bring the Chrome running RXWizard to the front, pop in
 
 	if (scanField = true)
 	{
-		if !InStr(NeoDriver.Url, "https://portal.rxwizard.com") ; Must be on a rxwizard page
+		if !InStr(currentURL, "https://portal.rxwizard.com") ; Must be on a rxwizard page
 		{
 			Gui, Destroy
 			MsgBox,, Wrong Page, Must be on an RxWizard Page
@@ -110,13 +106,11 @@ neo_activate(scanField) ; Bring the Chrome running RXWizard to the front, pop in
 		Sleep, 100
 		NeoDriver.findElementByID("click-and-scan").click()
 	}
-	return
+	return currentURL
 }
 
 neo_swapPages(destPage) ; swaps between review and edit pages
 {
-    global NeoDriver
-
 	currentURL := Neo_StillOpen()
 
 	Neo_Activate(scanField=false)
@@ -142,12 +136,7 @@ neo_swapPages(destPage) ; swaps between review and edit pages
 
 neo_getPatientInfo() ; retrieves and returns patient info from review/edit pages
 {
-    global NeoDriver
-	Neo_StillOpen()
-
-	Neo_Activate(scanField:=false)
-
-	currentURL := NeoDriver.Url
+	currentURL := Neo_Activate(scanField:=false)
 
     if !InStr(currentURL, "https://portal.rxwizard.com/cases/review/") and !InStr(currentURL, "https://portal.rxwizard.com/cases/edit/")
 	{
@@ -174,10 +163,10 @@ neo_getPatientInfo() ; retrieves and returns patient info from review/edit pages
 		patientInfo["firstName"] := StrSplit(patientInfo["fullName"], " ")[1]
 		patientInfo["lastName"] := StrReplace(patientInfo["fullName"], patientInfo["firstName"] " ", "")
 
-		try patientInfo["panNumber"] := NeoDriver.findElementByCss(reviewPageCSS["panNumber"]).Attribute("innerText")
+		try patientInfo["panNumber"] := NeoDriver.findElementByCss(reviewPageCSS["panNumber"], 1).Attribute("innerText")
 		catch e
 		{
-			MsgBox Couldn't find the pan number
+			patientInfo["panNumber"] := "nopan"
 		}
 
 		try patientInfo["clinicName"] := NeoDriver.findElementByCss(reviewPageCSS["clinicName"]).Attribute("innerText")
@@ -211,7 +200,7 @@ neo_getPatientInfo() ; retrieves and returns patient info from review/edit pages
 		try patientInfo["panNumber"] := NeoDriver.findElementByID("pan").Attribute("innerText")
 		catch e
 		{
-			MsgBox Couldn't find the pan number
+			patientInfo["panNumber"] := "nopan"
 		}
 
 		try patientInfo["clinicName"] := NeoDriver.findElementByID("office").Attribute("innerText")

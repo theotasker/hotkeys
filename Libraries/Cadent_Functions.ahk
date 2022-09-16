@@ -1,4 +1,5 @@
 global Cadentcheck := 0
+global MyCadentDriver := ""
 
 Cadent_StartWebDriver()
 {
@@ -8,15 +9,14 @@ Cadent_StartWebDriver()
 		Exit
 	}
 
-	; Open another window and assign it to mycadent
 	Run, ChromeForAHK.lnk, %chromeShortcutDir%
-	Sleep, 2000
-	MyCadentDriver := ChromeGet()
+	Sleep, 500
+	global MyCadentDriver := ChromeGet()
+	MyCadentDriver.SwitchToWindowByTitle("New Tab")
 	MyCadentDriver.Get("https://mycadent.com/COrdersList.aspx")
 
 	CadentCheck := 1
 
-	Gui, Destroy
 	return MyCadentDriver
 }
 
@@ -24,15 +24,14 @@ Cadent_StillOpen() ; Checks to see if cadent driver is open, reopens if not
 {
 	if CadentCheck = 0
 	{
-		Gui, Destroy
 		MsgBox, 4, Open CadentDriver?, No instance of CadentDriver found, initiate?
 			IfMsgBox, Yes
 			{
 				global MyCadentDriver := Cadent_StartWebDriver()
+				return False
 			}
 			IfMsgBox, No
 			{
-				Gui, Destroy
 				Exit
 			}
 	}
@@ -43,11 +42,11 @@ Cadent_StillOpen() ; Checks to see if cadent driver is open, reopens if not
 		MsgBox, 4, Webdriver Error, The tab for driving MyCadent was closed, reinitiate webdriver?
 			IfMsgBox, Yes
 				global MyCadentDriver := Cadent_StartWebDriver()
+				return False
 			IfMsgBox, No
 			{
 				return
 			}
-		Gui, Destroy
 		Exit
 	}
 	return currentURL
@@ -55,8 +54,6 @@ Cadent_StillOpen() ; Checks to see if cadent driver is open, reopens if not
 
 Cadent_ordersPage(patientInfo, patientSearch) ; goes to the patient search page, enters patient info if asked
 {
-	Cadent_StillOpen()
-
 	if (MyCadentDriver.Url != "https://mycadent.com/COrdersList.aspx")
     {
         MyCadentDriver.Get("https://mycadent.com/COrdersList.aspx")
@@ -67,25 +64,23 @@ Cadent_ordersPage(patientInfo, patientSearch) ; goes to the patient search page,
 	else
 	{
 		MsgBox The MyCadent site must be on the top tab for this shortcut to work
-		Gui, Destroy
 		Exit
 	}
 
-	Sleep, 100
-	Send, {tab}
-	Sleep, 100
+	Send, {tab}{tab}{tab}
+	sleep, 100
+
     MyCadentDriver.findElementByID(Path_CadentSearchFieldID).click()
 	Sleep, 100
 	Send, {CtrlDown}a{CtrlUp}
+	sleep, 100
 
 	if (patientSearch = True) {
 		if StrLen(patientInfo["firstName"]) > 1 and StrLen(patientInfo["lastName"]) > 1
 		{
-			BlockInput, MouseMove
 			Send % patientInfo["lastName"]
 			Send {,}{space}
 			Send % patientInfo["firstName"]
-			BlockInput, MouseMoveOff
 		}
 	}
 	return
