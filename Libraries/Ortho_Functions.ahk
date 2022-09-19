@@ -3,9 +3,10 @@
 ; ===========================================================================================================================
 
 ; ===========================================================================================================================
-; Constants for button positions
+; Constants and groups
 ; ===========================================================================================================================
 
+; constants for 3Shape button positions
 global allViewX := 1902
 global topViewY := 286
 global bottomViewY := 253
@@ -30,6 +31,7 @@ global waxKnifeY := 175
 global nextButtonX := 190
 global nextButtonY := 30
 
+; starting ticks for double-tap functions for 3D mouse
 topTick := A_TickCount
 sideTick := A_TickCount
 frontTick := A_TickCount
@@ -38,6 +40,7 @@ waxOneTick := A_TickCount
 waxTwoTick := A_TickCount
 waxThreeTick := A_TickCount
 
+; Groups to determine active windows
 GroupAdd, ThreeShape, OrthoAnalyzer - [
 GroupAdd, ThreeShape, ApplianceDesigner - [
 
@@ -49,11 +52,14 @@ GroupAdd, ThreeShapeExe, ahk_exe ApplianceDesigner.exe
 
 
 
-Ortho_AdvSearch(patientInfo) ; function to enter patient name into advanced search field and search using globals
+Ortho_AdvSearch(patientInfo, searchMethod) ; function to enter patient name into advanced search field and search using globals
 {
+	BlockInput MouseMove
+
     if StrLen(patientInfo["firstName"]) < 2 or StrLen(patientInfo["lastName"]) < 2
     {
         BlockInput MouseMoveOff
+		Gui, Destroy
         MsgBox No patient info saved from RXWizard
         Exit
     }
@@ -61,46 +67,45 @@ Ortho_AdvSearch(patientInfo) ; function to enter patient name into advanced sear
     if !WinExist("Open patient case")
     {
         BlockInput MouseMoveOff
+		Gui, Destroy
         MsgBox Must be in the "Open Patient Case" Dialogue for this hotkey
         Exit
     }
-
-    progressBar("create", 0)
 
     WinActivate, ahk_exe OrthoAnalyzer.exe
     WinWaitActive, Open patient case,, 10
 
     if ErrorLevel
     {
-        Gui, Destroy
+		BlockInput MouseMoveOff
+		Gui, Destroy
         MsgBox, Couldn't get focus on Ortho Analyzer
         return
     }
     Sleep, 200
 
-    progressBar("update", 20)
-
     ControlFocus, Advanced search, Open patient case
     Sleep, 400
     Send, {Enter}
     Sleep, 400
-    progressBar("update", 30)
 
-	ortho_sendText(patientInfo["firstName"], "TEdit10", "Open patient case")
-    progressBar("update", 40)
+	if (searchMethod = "patientName")
+	{
+		ortho_sendText(patientInfo["firstName"], "TEdit10", "Open patient case")
 
-	ortho_sendText(patientInfo["lastName"], "TEdit9", "Open patient case")
-    progressBar("update", 50)
+		ortho_sendText(patientInfo["lastName"], "TEdit9", "Open patient case")
 
-	ortho_sendText(patientInfo["clinicName"], "Edit1", "Open patient case")
-    progressBar("update", 60)
+		ortho_sendText(patientInfo["clinicName"], "Edit1", "Open patient case")
+	}
+	else 
+	{
+		ortho_sendText(patientInfo["scriptNumber"], "TEdit16", "Open patient case")
+	}
 
-    ControlFocus, TButton2, Open patient case
-    Send {enter}
-    Sleep, 100
-    Send {down}
-
-    progressBar("destroy", 30)
+	ControlFocus, TButton2, Open patient case
+	Send {enter}
+	Sleep, 100
+	Send {down}
 
     BlockInput MouseMoveOff
     return
@@ -108,18 +113,18 @@ Ortho_AdvSearch(patientInfo) ; function to enter patient name into advanced sear
 
 ortho_createModelSet(patientInfo)
 {
-	progressBar("create", 0)
+	BlockInput MouseMove
 
     if !WinExist("Open patient case")
     {
+		BlockInput MouseMoveOff
+		Gui, Destroy
         MsgBox must be on "Open patient case" to use this function
-        Gui, Destroy
         Exit
     }
 
     WinActivate Open patient case
 	quickClick("78", "46")
-    progressBar("update", 33)
 
     ; see which window opens
     WinWaitActive, ahk_group ThreeShapePatient,, 5
@@ -130,7 +135,6 @@ ortho_createModelSet(patientInfo)
         MsgBox, Couldn't get focus patient info popup
         Exit
     }
-    progressBar("update", 66)
 
     SetTitleMatchMode, 3
     if WinActive("New patient info",, model)
@@ -151,81 +155,20 @@ ortho_createModelSet(patientInfo)
     else
     {
         BlockInput, MouseMoveOff
+		Gui, Destroy
         MsgBox,, Wrong Window, Didn't land on the "New patient info" or "New model set" window
-        Gui, Destroy
         Exit
     }
 
-    progressBar("destroy", 100)
-
     BlockInput, MouseMoveOff
-
     return
 }
 
 
-Ortho_OpenCase()
-{
-	global
-
-	if !WinExist("Open patient case")
-    {
-		BlockInput, MouseMoveOff
-        MsgBox must be on "Open patient case" to use this function
-        Gui, Destroy
-        Exit
-    }
-
-	if StrLen(firstname) < 2 or StrLen(lastname) < 2
-    {
-        BlockInput MouseMoveOff
-        MsgBox No patient info saved from RXWizard
-        Exit
-    }
-
-	if WinExist("Exported items")
-    {
-		WinActivate, Exported items
-		WinWaitActive, Exported items,, 10
-		ControlFocus, TButton1, Exported items
-		Sleep, 300
-		Send {Enter}
-
-    }
-
-	WinActivate, ahk_group ThreeShapeExe
-    WinWaitActive, Open patient case,, 10
-
-    if ErrorLevel
-    {
-		BlockInput, MouseMoveOff
-        Gui, Destroy
-        MsgBox, Couldn't get focus on Ortho Analyzer
-        Exit
-    }
-
-	ControlFocus, Advanced search, Open patient case
-    Sleep, 600
-    Send, {Enter}
-    Sleep, 400
-
-	ControlFocus, TEdit16, Open patient case
-    Sleep, 400
-    Send, %scriptnumber%
-    Sleep, 400
-
-	Send, {Enter}
-
-	Sleep, 400
-
-	Send {down}{right}{down}
-
-	return
-}
-
 Ortho_View(firstViewY, secondViewY, lastActionTick) ; clicks the view button declared before the function is called, swaps to a secondary view if pressed twice
 {
     global toggle
+	BlockInput MouseMove
 
     currentTick := A_TickCount
 	if currentTick - lastActionTick > 1000
@@ -250,11 +193,13 @@ Ortho_View(firstViewY, secondViewY, lastActionTick) ; clicks the view button dec
 			toggle := 1
 		}
 	}
+	BlockInput MouseMoveOff
 	return currentTick
 }
 
 Ortho_VisibleModel() ; Swaps Visisble Model
 {
+	BlockInput MouseMove
     global UpperDotX, UpperDotY, LowerDotX, LowerDotY
 
     ; Activates the main window and gets the pixel colors of the model dots
@@ -290,16 +235,21 @@ Ortho_VisibleModel() ; Swaps Visisble Model
 		MouseMove, %x%, %y%, 0
 		BlockInput MouseMoveOff
 	}
+	BlockInput MouseMoveOff
 	return
 }
 
 Ortho_Wax(firstKnife, secondKnife, lastTick) ; Tool for swapping out wax knifes
 {
+	BlockInput MouseMove
 	ControlGetText, PrepStep, TdfInfoCaption2, ahk_group ThreeShape
 	ControlGetText, PrepTool, TdfGroupInfo1, ahk_group ThreeShape
 
 	if PrepStep not in Sculpt Maxillary,Sculpt Mandibular
+	{
+		BlockInput MouseMoveOff
 		return
+	}
 
 	if PrepTool != "Wax knife settings"
 		WinActivate ahk_group ThreeShape
@@ -313,29 +263,25 @@ Ortho_Wax(firstKnife, secondKnife, lastTick) ; Tool for swapping out wax knifes
 	{
 		Send %secondKnife%
 	}
+	BlockInput MouseMoveOff
 	return currentTick
 }
 
 Ortho_Export() ; While in model edit, clicks the green check mark and exports model
 {
-    global
+	BlockInput MouseMove
+	if !WinExist("ahk_group ThreeShape")
+	{
+		BlockInput MouseMoveOff
+		Gui, Destroy
+		MsgBox,, Wrong Window, Must be in a case to use this function
+		return
+	}
 
-    Gui, Add, Progress, vprogress w300 h45
-    Gui, +AlwaysOnTop
-	Gui, Show, w320 h25 %ProgX% %ProgY%, Script Running
-
-
-	; Check Mark
 	BlockInput MouseMove
 	WinActivate ahk_group ThreeShape
-
-    GuiControl,, Progress, 10
-
-    ; Click Green Check Mark
-	Click, 1088, 95
+	Click, 1088, 95 ; Check Mark
 	BlockInput MouseMoveOff
-
-    GuiControl,, Progress, 20
 
 	WinWaitActive, Open patient case,, 30
 	if ErrorLevel
@@ -345,11 +291,8 @@ Ortho_Export() ; While in model edit, clicks the green check mark and exports mo
 		MsgBox,, Timeout Error, "Open Patient Case" window took too long to open
 		Exit
 	}
-
-    GuiControl,, Progress, 40
-
-	; Export Clicks
-	BlockInput MouseMove
+	
+	BlockInput MouseMove ; Export Clicks
 	Sleep, 200
 	Click, 389, 46
 	Sleep, 100
@@ -357,10 +300,7 @@ Ortho_Export() ; While in model edit, clicks the green check mark and exports mo
 	Sleep, 100
 	Send {Enter}
 
-    GuiControl,, Progress, 50
-
-    ; Wait for export confirmation box
-	WinWaitActive, Exported items,, 15
+	WinWaitActive, Exported items,, 15 ; Wait for export confirmation box
 	if ErrorLevel
 	{
 		BlockInput MouseMoveOff
@@ -369,20 +309,18 @@ Ortho_Export() ; While in model edit, clicks the green check mark and exports mo
 		Exit
 	}
 
-    GuiControl,, Progress, 60
-
-
 	BlockInput MouseMoveOff
-
-    GuiControl,, Progress, 100
-    Gui, Destroy
-
 	return
 }
 
-Ortho_takeBitePics(patientInfo) {
+Ortho_takeBitePics(patientInfo) 
+{
+	BlockInput MouseMove
+
 	if !WinExist("ahk_group ThreeShape")
 		{
+			BlockInput MouseMoveOff
+        	Gui, Destroy
 			MsgBox,, Wrong Window, Case must be open in OrthoAnalyzer or ApplianceDesigner
 			Exit
 		}
@@ -406,6 +344,7 @@ Ortho_takeBitePics(patientInfo) {
 
 	CaptureScreen(screenshotName "Right.jpg")
 
+	BlockInput MouseMoveOff
 	return screenshotDir
 }
 

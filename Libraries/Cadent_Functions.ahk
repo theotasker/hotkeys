@@ -5,6 +5,8 @@ Cadent_StartWebDriver()
 {
 	if !FileExist(chromeShortcutDir "ChromeForAHK.lnk")
 	{
+		BlockInput MouseMoveOff
+		Gui, Destroy
 		MsgBox,, Chrome Shortcut Not Found, Can't find the proper shortcut at %A_MyDocuments%\Automation\ChromeForAHK.lnk `nRemember to modify the shortcut to run in debug mode by adding "--remote-debugging-port=9222"
 		Exit
 	}
@@ -59,10 +61,14 @@ Cadent_ordersPage(patientInfo, patientSearch) ; goes to the patient search page,
         MyCadentDriver.Get("https://mycadent.com/COrdersList.aspx")
     }
 
+	BlockInput MouseMove
+
 	if WinExist("Clinical Orders List - Google Chrome")
 		WinActivate
 	else
 	{
+		BlockInput MouseMoveOff
+		Gui, Destroy
 		MsgBox The MyCadent site must be on the top tab for this shortcut to work
 		Exit
 	}
@@ -83,21 +89,30 @@ Cadent_ordersPage(patientInfo, patientSearch) ; goes to the patient search page,
 			Send % patientInfo["firstName"]
 		}
 	}
+	BlockInput, MouseMoveOff
 	return
 }
 
 Cadent_exportClick(currentURL) 
 {
+	BlockInput MouseMove
+
 	if !InStr(currentURL, "https://mycadent.com/CaseInfo.aspx") {
+		BlockInput MouseMoveOff
+		Gui, Destroy
 		MsgBox,, Wrong Page, Must be on a case page in MyCadent
 		Exit
 	}
 
 	try MyCadentDriver.findElementByID(Path_CadentExport).click() 
 	catch e {
+		BlockInput MouseMoveOff
+		Gui, Destroy		
 		Msgbox,, Web Error, Couldn't click on the export button on MyCadent
 		Exit
 	}
+
+	BlockInput, MouseMoveOff
 	return
 }
 
@@ -108,18 +123,21 @@ Cadent_exportOrthoCAD(patientInfo)
 	SetTitleMatchMode, 1
 	WinWait, ahk_exe OrthoCAD.exe,, 30, Export  ; Wait for main window to open
 	if ErrorLevel {
-			BlockInput, MouseMoveOff
+			BlockInput MouseMoveOff
+			Gui, Destroy
 			MsgBox,, OrthoCAD Error, Main OrthoCAD window didn't open
 			Exit
 		}
 
 	Sleep, 400 ; buffer for file to load
 	Cadent_ordersPage(patientInfo, patientSearch:=False)
+	BlockInput, MouseMove
 
 	SetTitleMatchMode, 3
 	WinWait, OrthoCAD Export,, 30   ; Wait for export box to open
 	if ErrorLevel {
-			BlockInput, MouseMoveOff
+			BlockInput MouseMoveOff
+			Gui, Destroy
 			MsgBox,, OrthoCAD Error, Export box didn't open
 			Exit
 		}
@@ -152,7 +170,8 @@ Cadent_exportOrthoCAD(patientInfo)
 	SetTitleMatchMode, 3
 	WinWait, Export Done,, 30
 	if ErrorLevel {
-			BlockInput, MouseMoveOff
+			BlockInput MouseMoveOff
+			Gui, Destroy
 			MsgBox,, OrthoCAD Error, Export confirmation box didn't open
 			Exit
 		}
@@ -160,7 +179,8 @@ Cadent_exportOrthoCAD(patientInfo)
 	WinActivate, Export Done
 	WinWaitActive, Export Done,, 30
 	if ErrorLevel {
-			BlockInput, MouseMoveOff
+			BlockInput MouseMoveOff
+			Gui, Destroy
 			MsgBox,, OrthoCAD Error, Couldn't get focus on export confirmation box
 			Exit
 		}
@@ -188,10 +208,12 @@ Cadent_exportOrthoCAD(patientInfo)
 	WinWaitClose, ahk_exe OrthoCAD.exe,, 10
 	if ErrorLevel 
 	{
-		BlockInput, MouseMoveOff
+		BlockInput MouseMoveOff
+		Gui, Destroy
 		MsgBox,, OrthoCAD Error, Couldn't close OrthoCAD
 		Exit
 	}
+
 	BlockInput, MouseMoveOff
 	return exportFilename
 }
@@ -205,6 +227,8 @@ Cadent_moveSTLs(exportFilename)
 
 	IfNotExist, C:\Cadent\Export\%exportFilename% 
 	{
+		BlockInput MouseMoveOff
+		Gui, Destroy		
 		MsgBox Couldn't find export folder, didn't move files
 	}
 
@@ -240,8 +264,9 @@ Cadent_GetOrderID()
 
 	if !InStr(MyCadentDriver.Url, "https://mycadent.com/CaseInfo.aspx")
 	{
+		BlockInput MouseMoveOff
+		Gui, Destroy		
 		MsgBox Must be on MyCadent order page to use this function
-		Gui, Destroy
 		Exit
 	}
 

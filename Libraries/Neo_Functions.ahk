@@ -35,6 +35,7 @@ neo_startWebDriver() ; closes existing Chromes and opens a new one, binds it to 
 
 	if !FileExist(chromeShortcutDir "ChromeForAHK.lnk")
 	{
+		Gui, Destroy
 		MsgBox,, Chrome Shortcut Not Found, Can't find the proper shortcut at %A_MyDocuments%\Automation\ChromeForAHK.lnk `nRemember to modify the shortcut to run in debug mode by adding "--remote-debugging-port=9222"
 		Exit
 	}
@@ -89,6 +90,7 @@ neo_activate(scanField) ; Bring the Chrome running RXWizard to the front, pop in
 	}
 	else
 	{
+		Gui, Destroy
 		MsgBox,, Website Error, RxWizard Portal should be the top tab in its own instance
 		exit
 	}
@@ -102,7 +104,7 @@ neo_activate(scanField) ; Bring the Chrome running RXWizard to the front, pop in
 			Exit
 		}  
 
-		Send {tab}
+		Send {tab}{tab}{tab}
 		Sleep, 100
 		NeoDriver.findElementByID("click-and-scan").click()
 	}
@@ -117,6 +119,7 @@ neo_swapPages(destPage) ; swaps between review and edit pages
 
 	if (!InStr(currentURL, "/review/") and !InStr(currentURL, "/edit/"))
 	{
+		Gui, Destroy
 		msgbox,, Wrong Page, Need to be on the review or edit page
 		Exit
 	}
@@ -140,6 +143,7 @@ neo_getPatientInfo() ; retrieves and returns patient info from review/edit pages
 
     if !InStr(currentURL, "https://portal.rxwizard.com/cases/review/") and !InStr(currentURL, "https://portal.rxwizard.com/cases/edit/")
 	{
+		Gui, Destroy
         MsgBox Not on the review or edit page
 		Exit
 	}
@@ -151,6 +155,7 @@ neo_getPatientInfo() ; retrieves and returns patient info from review/edit pages
 		try patientInfo["fullName"] := NeoDriver.findElementByCss(reviewPageCSS["patientName"]).Attribute("innerText")
 		catch e
 		{
+			Gui, Destroy
 			MsgBox, couldn't find patient name
 			Exit
 		}
@@ -172,6 +177,7 @@ neo_getPatientInfo() ; retrieves and returns patient info from review/edit pages
 		try patientInfo["clinicName"] := NeoDriver.findElementByCss(reviewPageCSS["clinicName"]).Attribute("innerText")
 		catch e
 		{
+			Gui, Destroy
 			MsgBox, couldn't find clinic name
 			Exit
 		}
@@ -185,6 +191,7 @@ neo_getPatientInfo() ; retrieves and returns patient info from review/edit pages
 		}
 		catch e
 		{
+			Gui, Destroy
 			MsgBox, couldn't find patient name
 			Exit
 		}
@@ -206,6 +213,7 @@ neo_getPatientInfo() ; retrieves and returns patient info from review/edit pages
 		try patientInfo["clinicName"] := NeoDriver.findElementByID("office").Attribute("innerText")
 		catch e
 		{
+			Gui, Destroy
 			MsgBox, couldn't find clinic name
 			Exit
 		}
@@ -214,6 +222,7 @@ neo_getPatientInfo() ; retrieves and returns patient info from review/edit pages
 	try patientInfo["scriptNumber"] := NeoDriver.findElementByClass("case-name").Attribute("innerText")
 	catch e
 	{
+		Gui, Destroy
 		MsgBox Couldn't find the script number
 	}
 
@@ -228,11 +237,13 @@ neo_getPatientInfo() ; retrieves and returns patient info from review/edit pages
 neo_newNote(orderID) ; Puts new note onto the edit page
 {
 	global NeoDriver
+	BlockInput MouseMove
 
 	Neo_StillOpen()
 
 	if (!InStr(NeoDriver.Url, "https://portal.rxwizard.com/cases/review/")) and (!InStr(NeoDriver.Url, "https://portal.rxwizard.com/cases/edit/"))
 	{
+		Gui, Destroy
 		MsgBox Must be on review or edit page to use this function
 		Exit
 	}
@@ -240,17 +251,17 @@ neo_newNote(orderID) ; Puts new note onto the edit page
 	try NeoDriver.findElementByCss(bothPageCSS["newNote"]).Click()
 	catch e
 	{
+		Gui, Destroy
 		MsgBox,, Couldn't Find Element, Couldn't find the "new note" button
 		Exit
 	}
-
-	BlockInput, MouseMove
 	Sleep, 200
 
 	try NeoDriver.findElementByID("note_type").Click() ; Dropdown for input type
 	catch e
 	{
 		BlockInput, MouseMoveOff
+		Gui, Destroy
 		MsgBox,, Couldn't Find Element, Couldn't find the note type drop down
 		Exit
 	}
@@ -263,35 +274,36 @@ neo_newNote(orderID) ; Puts new note onto the edit page
 	catch e
 	{
 		BlockInput, MouseMoveOff
-		MsgBox,, Couldn't Find Element, Couldn't find the note text box
 		Gui, Destroy
+		MsgBox,, Couldn't Find Element, Couldn't find the note text box
 		Exit
 	}
 
 	Sleep, 200
 	Send iTero ID: %orderID%
-	BlockInput, MouseMoveOff
-
-
 
 	try NeoDriver.findElementByCss(bothPageCSS["noteSave"]).Click()
 	catch e
 	{
 		BlockInput, MouseMoveOff
+		Gui, Destroy
 		MsgBox,, Couldn't Find Element, Couldn't find the note text box
 		Gui, Destroy
 		Exit
 	}
 
+	BlockInput, MouseMoveOff
 	return
 }
 
 neo_uploadPic(screenshotDir) {
 	global NeoDriver
+	BlockInput MouseMove
 
 	try NeoDriver.findElementByCss(bothPageCSS["uploadFile"]).Click()
 	catch e 
 	{
+		Gui, Destroy
 		MsgBox,, Website Error, Couldn't find the file upload button on the website, make sure case is in production
 		Exit
 	}
@@ -299,6 +311,7 @@ neo_uploadPic(screenshotDir) {
 	WinWaitActive Open,, 5
 	if ErrorLevel 
 	{
+		Gui, Destroy
 		MsgBox,, Website Error, File Upload window didn't open properly
 		Exit
 	}
@@ -317,6 +330,8 @@ neo_uploadPic(screenshotDir) {
 	Sleep, 100
 
 	Send {enter} ; confirm
+
+	BlockInput, MouseMoveOff
 	return
 }
 
@@ -330,8 +345,8 @@ neo_start(currentStep) ; hits the start button on the review page
 
 	if !InStr(NeoDriver.Url, "https://portal.rxwizard.com/cases/review/") ; checks to ensure on the review page
 	{
-		MsgBox,, Wrong Page, Must be on the review page for this function
 		Gui, Destroy
+		MsgBox,, Wrong Page, Must be on the review page for this function
 		Exit
 	}
 

@@ -2,15 +2,6 @@
 ; Progress bar utilities and step settings
 ; =========================================================================================================================
 
-; default progress bar location
-global ProgX := "x788"
-global ProgY := "y150"
-
-; default step for the program
-Step := "Prepping"
-StartStep := "Start Digital Prep"
-EndStep := "End Digital Prep"
-
 Pause::
 {
 	SetBox()
@@ -19,12 +10,12 @@ Pause::
 
 Progress: ; Set the location of the progress bar
 {
-	ProgX := "x788"
-	ProgY := "y150"
+	progressBarX := "x788"
+	progressBarY := "y150"
 	Gui, Destroy
 	Gui, Add, Text, x0 y0 w320 h15 , Move this box to where you want your progress bar to be
 	Gui, Add, Button, x52 y15 w120 h20 gSetLocation, Set Location
-	Gui, Show, %ProgX% %ProgY% w320 h30, Select Location
+	Gui, Show, %progressBarX% %progressBarY% w320 h30, Select Location
 	return
 }
 
@@ -32,8 +23,8 @@ SetLocation: ; Subroutine for the progress bar location set GUI
 {
 	Gui, Show
 	WinGetPos, VarX, VarY,,, Select Location
-	ProgX := "x" + VarX
-	ProgY := "y" + VarY
+	progressBarX := "x" + VarX
+	progressBarY := "y" + VarY
 	Gui, Destroy
 	return
 }
@@ -80,24 +71,6 @@ GuiClose:
 	Exit
 }
 
-ManagerCheckSub: ; runs when the check box is clicked, updates txt file and updates program variable for website
-{
-	Gui, Submit, NoHide
-
-	if ManagerCheckVar = 1
-	{
-		FileDelete, %ManagerCheckFile%
-		FileAppend, yes, %ManagerCheckFile%
-		managercheck := "yes"
-	}
-	if ManagerCheckVar = 0
-	{
-		FileDelete, %ManagerCheckFile%
-		FileAppend, no, %ManagerCheckFile%
-		managercheck := "no"
-	}
-	return
-}
 
 Guide:
 {
@@ -129,7 +102,7 @@ progressBar(action, percent)
 	if (action = "create")
 	{
 		Gui, Add, Progress, vprogress w300 h45
-		Gui, Show, w320 h25 %ProgX% %ProgY%, Script Running
+		Gui, Show, w320 h25 %progressBarX% %progressBarY%, Script Running
 		Gui, +AlwaysOnTop
 	}
 	else if (action = "update")

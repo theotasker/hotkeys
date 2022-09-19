@@ -17,7 +17,9 @@ CoordMode, Pixel, Client
 #Include D:\hotkeys\Libraries\Netfabb_Functions.ahk
 #Include D:\hotkeys\Libraries\Ortho_Functions.ahk
 
-SetBox() ; opens the settings box to select step
+; default progress bar location
+global progressBarX := "x788"
+global progressBarY := "y150"
 
 ; ===========================================================================================================================
 ; Directories
@@ -35,18 +37,42 @@ global screenshotDir := A_MyDocuments "\Automation\Screenshots"
 
 f1::
 {
-	Netfabb_Level()
+	progressBar(action:="create", percent:=0)
+
+	patientInfo := neo_getPatientInfo()
+	progressBar(action:="update", percent:=50)
+
+	Ortho_AdvSearch(patientInfo, searchMethod:="scriptNumber")
+	progressBar(action:="destroy", percent:=0)
+
 	return
 }
 
 f2:: 
 {
-	Netfabb_finish()
+	progressBar(action:="create", percent:=0)
+
+	patientInfo := neo_getPatientInfo()
+	progressBar(action:="update", percent:=25)
+
+	screenshotDir := Ortho_takeBitePics(patientInfo)
+	progressBar(action:="update", percent:=50)
+
+	Neo_Activate(scanField:=false)
+	progressBar(action:="update", percent:=75)
+
+	Neo_uploadPic(screenshotDir)
+	progressBar(action:="destroy", percent:=0)
+
 	return
 }
 
 f3:: ; just for testing, for now
 {
+	progressBar(action:="create", percent:=0)
+	Ortho_Export()
+
+	progressBar(action:="destroy", percent:=0)
 	return
 }
 
@@ -57,30 +83,34 @@ f3:: ; just for testing, for now
 
 f4:: ; place cursor in the search field in RXWizard for barcode scanning
 {
+	progressBar(action:="create", percent:=0)
+
     Neo_activate(scanField:=True)
+	progressBar(action:="destroy", percent:=0)
     return
 }
 
 f5:: ; Swap between review and edit pages
 {
+	progressBar(action:="create", percent:=0)
+
 	Neo_swapPages(destPage:="swap")
+	progressBar(action:="destroy", percent:=0)
 	return
 }
 
 f6:: ; hit start/stop button for case, must be on review or edit page
 {
-    ; Neo_swapPages(destPage:="review")
+	progressBar(action:="create", percent:=0)
 
-	; needStop := Neo_start(currentStep:=currentStep)
+	orderID := Cadent_GetOrderID()
+	progressBar(action:="update", percent:=30)
 
-	; if (Needstop = True)
-	; {
-	; 	Neo_stop(currentStep:=currentStep)
-	; }
-	; Sleep, 1000
+	Neo_Activate(scanField:=false)
+	progressBar(action:="update", percent:=60)
 
-	; Neo_activate(scanField:=true)
-
+	Neo_NewNote(orderID)
+	progressBar(action:="destroy", percent:=0)
 	return
 }
 
@@ -90,62 +120,51 @@ f6:: ; hit start/stop button for case, must be on review or edit page
 
 f7:: ; retrieve patient info from RXWizard and perform advanced search inside OrthoAnalyzer
 {
+	progressBar(action:="create", percent:=0)
+
 	patientInfo := neo_getPatientInfo()
+	progressBar(action:="update", percent:=50)
 
-	Ortho_AdvSearch(patientInfo)
-
+	Ortho_AdvSearch(patientInfo, searchMethod:="patientName")
+	progressBar(action:="destroy", percent:=0)
     return
 }
 
 f8:: ; Create new patient if non exists, then create model set
 {
+	progressBar(action:="create", percent:=0)
+
 	patientInfo := neo_getPatientInfo()
+	progressBar(action:="update", percent:=50)
 
 	ortho_createModelSet(patientInfo)
-
+	progressBar(action:="destroy", percent:=0)
 	return
 }
 
-f9:: ; for importing, returns to patient info and deletes temp STLs. for prepping, returns to patient info and exports STL 
+f9:: ; for importing, returns to patient info and deletes temp STLs
 {
-	if currentStep = "importing" 
+	progressBar(action:="create", percent:=0)
+
+	if !WinExist("OrthoAnalyzer. Patient ID:") 
 	{
-		if !WinExist("OrthoAnalyzer. Patient ID:") 
-		{
-			MsgBox Must be in case view window in Ortho Analyzer for this function
-			Exit
-		}
-		SetTitleMatchMode, 1
-		WinActivate OrthoAnalyzer. Patient ID:
-		WinWaitActive OrthoAnalyzer. Patient ID:
+		MsgBox Must be in case view window in Ortho Analyzer for this function
+		Exit
+	}
+	SetTitleMatchMode, 1
+	WinActivate OrthoAnalyzer. Patient ID:
+	WinWaitActive OrthoAnalyzer. Patient ID:
 
-		quickClick("27", "43")
+	quickClick("27", "43")
+	progressBar(action:="update", percent:=50)
 
-		if FileExist(A_MyDocuments "\Temp Models\*.stl") 
-		{
-			Loop, 10
-				FileDelete, %A_MyDocuments%\Temp Models\*.stl
-		}
+	if FileExist(A_MyDocuments "\Temp Models\*.stl") 
+	{
+		Loop, 10
+			FileDelete, %A_MyDocuments%\Temp Models\*.stl
 	}
 
-	else if currentStep = "prepping"
-	{
-		if WinExist("ahk_group ThreeShape") 
-		{
-			Ortho_Export()
-		}
-		else 
-		{
-			MsgBox,, Wrong Window, Must be in a case to use this function
-			Exit
-		}
-	}
-
-	else 
-	{
-		MsgBox,, Wrong Step, Must be on the importing or prepping step for this function
-	}
-
+	progressBar(action:="destroy", percent:=0)
     return
 }
 
@@ -155,38 +174,52 @@ f9:: ; for importing, returns to patient info and deletes temp STLs. for preppin
 
 f10:: ; get patient info from RXWizard and search in myCadent
 {
+	progressBar(action:="create", percent:=0)
+
 	if !Cadent_StillOpen()
 	{
+		progressBar(action:="destroy", percent:=0)
 		return
 	}
 	
 	patientInfo := neo_getPatientInfo()
+	progressBar(action:="update", percent:=50)
 
     Cadent_ordersPage(patientInfo, patientSearch:=True)
-
+	progressBar(action:="destroy", percent:=0)
 	return
 }
 
 f11:: ; While on patient page in myCadent, export STL
 {
+	progressBar(action:="create", percent:=0)
+
 	patientInfo := neo_getPatientInfo()
+	progressBar(action:="update", percent:=10)
 
 	currentURL := Cadent_StillOpen()
+	progressBar(action:="update", percent:=20)
 
 	Cadent_exportClick(currentURL) ; exports through the myCadent site, opens OrthoCAD
+	progressBar(action:="update", percent:=30)
 
 	exportFilename := Cadent_exportOrthoCAD(patientInfo) ; exports the STL from OrthoCad, closes OrthoCAD
+	progressBar(action:="update", percent:=70)
 
 	Cadent_moveSTLs(exportFilename) ; moves exported STLs to the temp models folder
-
+	progressBar(action:="destroy", percent:=0)
     return
 }
 
 f12:: ; renames arches in temp models folder, asks user for arch selection and auto vs manual importing, moves files
 {
+	progressBar(action:="create", percent:=0)
+
 	patientInfo := neo_getPatientInfo()
+	progressBar(action:="update", percent:=10)
 
 	existingArchFilenames := parseArches()
+	progressBar(action:="destroy", percent:=20)
 
 	filenameBase := patientInfo["engravingBarcode"] "~" patientInfo["firstName"] "~" patientInfo["lastName"] "~" patientInfo["clinicName"] "~" patientInfo["scriptNumber"] "~"
 	filenameBase := StrReplace(filenameBase, " ", "_")
@@ -194,7 +227,6 @@ f12:: ; renames arches in temp models folder, asks user for arch selection and a
 	finishOptions := finishImportGUI(existingArchFilenames["arches"])
 
 	finalizeSTLs(finishOptions, existingArchFilenames, filenameBase)
-
 	return
 }
 
@@ -394,9 +426,9 @@ parseArches() {
 	tagsLower := ["Lwr.stl", "l.stl", "lower.stl", "man.stl", "Man.stl", "_l-"]
 
     archFilenames := {"arches":False, "upper":False, "lower":False}
+	tagCheck := False
 	for key, filename in tempModelList  ; for each stl in temp folder
 	{
-		tagCheck := False
 		for key, tag in tagsUpper ; check against upper tags
 		{
 			if instr(filename, tag) ; if the filename has this upper tag
@@ -480,7 +512,6 @@ finalizeSTLs(finishOptions, existingArchFilenames, filenameBase) {
     }
     return
 }
-
 
 ; =========================================================================================================================
 ; GIF easter egg
