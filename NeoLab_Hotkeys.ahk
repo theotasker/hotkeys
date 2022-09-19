@@ -488,8 +488,7 @@ finalizeSTLs(finishOptions, existingArchFilenames, filenameBase) {
 ^u::
 {
 	if GetKeyState("f") = 1
-	{
-
+	{							
 		AnimPicFile := A_ScriptDir"\Files\JP.gif"
 		Gui, +ToolWindow
 		AGif := AddAnimatedGIF(AnimPicFile)
