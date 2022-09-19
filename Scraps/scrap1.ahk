@@ -1,34 +1,15 @@
 #SingleInstance Force
 CoordMode, Mouse, Client
 CoordMode, Pixel, Client
+msgbox done
 
-GroupAdd, ThreeShape, OrthoAnalyzer - [
-GroupAdd, ThreeShape, ApplianceDesigner - [
-
-
-SettitleMatchMode, 1
-#IfWinExist ahk_group ThreeShape 
-
-3ShapeSteps := "Prepare occlusion,Setup plane alignment,Virtual base,Sculpt maxillary,Sculpt mandibular"
-
-DetectHiddenWindows, On
-DetectHiddenText, On
-VarSetCapacity(OutputVar, 255)
-
-SettitleMatchMode, 2
-SettitleMatchMode, slow
-
-ControlFocus, TdfGroupInfo1, ahk_group ThreeShape
-ControlGetText, PrepStep, TdfGroupInfo1, ahk_group ThreeShape
-if ErrorLevel   ; i.e. it's not blank or zero.
-    MsgBox, The window does not exist.
-else
-    MsgBox, The window exists.
-
-MsgBox % PrepStep
+Driver := ComObjCreate("Selenium.ChromeDriver")
+Driver.SetCapability("debuggerAddress", "127.0.0.1:9222")
+Driver.Start()
 
 
 
 
+; Driver.Get("google.com")
 
-
+msgbox done

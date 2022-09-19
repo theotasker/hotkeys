@@ -2,15 +2,6 @@
 ; Progress bar utilities and step settings
 ; =========================================================================================================================
 
-; default progress bar location
-global ProgX := "x788"
-global ProgY := "y150"
-
-; default step for the program
-Step := "Prepping"
-StartStep := "Start Digital Prep"
-EndStep := "End Digital Prep"
-
 Pause::
 {
 	SetBox()
@@ -19,12 +10,12 @@ Pause::
 
 Progress: ; Set the location of the progress bar
 {
-	ProgX := "x788"
-	ProgY := "y150"
+	progressBarX := "x788"
+	progressBarY := "y150"
 	Gui, Destroy
 	Gui, Add, Text, x0 y0 w320 h15 , Move this box to where you want your progress bar to be
 	Gui, Add, Button, x52 y15 w120 h20 gSetLocation, Set Location
-	Gui, Show, %ProgX% %ProgY% w320 h30, Select Location
+	Gui, Show, %progressBarX% %progressBarY% w320 h30, Select Location
 	return
 }
 
@@ -32,8 +23,8 @@ SetLocation: ; Subroutine for the progress bar location set GUI
 {
 	Gui, Show
 	WinGetPos, VarX, VarY,,, Select Location
-	ProgX := "x" + VarX
-	ProgY := "y" + VarY
+	progressBarX := "x" + VarX
+	progressBarY := "y" + VarY
 	Gui, Destroy
 	return
 }
@@ -80,24 +71,6 @@ GuiClose:
 	Exit
 }
 
-ManagerCheckSub: ; runs when the check box is clicked, updates txt file and updates program variable for website
-{
-	Gui, Submit, NoHide
-
-	if ManagerCheckVar = 1
-	{
-		FileDelete, %ManagerCheckFile%
-		FileAppend, yes, %ManagerCheckFile%
-		managercheck := "yes"
-	}
-	if ManagerCheckVar = 0
-	{
-		FileDelete, %ManagerCheckFile%
-		FileAppend, no, %ManagerCheckFile%
-		managercheck := "no"
-	}
-	return
-}
 
 Guide:
 {
@@ -123,13 +96,13 @@ SetBox()
 	return
 }
 
-progressBar(action, percent)
+Gui_progressBar(action, percent)
 {
 	global
 	if (action = "create")
 	{
 		Gui, Add, Progress, vprogress w300 h45
-		Gui, Show, w320 h25 %ProgX% %ProgY%, Script Running
+		Gui, Show, w320 h25 %progressBarX% %progressBarY%, Script Running
 		Gui, +AlwaysOnTop
 	}
 	else if (action = "update")
@@ -141,5 +114,104 @@ progressBar(action, percent)
 		GuiControl,, Progress, 100
 		Gui, Destroy
 	}
+	return
+}
+
+Gui_finishImport(arches) 
+{
+	global finishOptions := {"upper":False, "lower":False, "auto":False}
+	if (arches = "both")
+	{
+		Gui, Add, Text, x30 y20 w300 h14 +Center, Manual Import:
+		Gui, Add, Button, x12 y40 w100 h30 gUpperManual, Upper Manual
+		Gui, Add, Button, x112 y40 w100 h30 gLowerManual, Lower Manual
+		Gui, Add, Button, x212 y40 w100 h30 gBothManual, Both Manual
+
+		Gui, Add, Text, x30 y120 w300 h14 +Center, Auto Import:
+		Gui, Add, Button, x12 y140 w100 h30 gUpperAuto, Upper Auto
+		Gui, Add, Button, x112 y140 w100 h30 gLowerAuto, Lower Auto
+		Gui, Add, Button, x212 y140 w100 h30 gBothAuto, Both Auto
+
+		Gui, Show, w439 h253, Arch Selection (Two Arches Detected)
+
+		WinWaitClose, Arch Selection (Two Arches Detected)
+	}
+
+	if (arches = "upper")
+	{
+		Gui, Add, Text, x30 y20 w300 h14 +Center, Manual Import:
+		Gui, Add, Button, x12 y40 w100 h30 gUpperManual, Upper Manual
+
+		Gui, Add, Text, x30 y120 w300 h14 +Center, Auto Import:
+		Gui, Add, Button, x12 y140 w100 h30 gUpperAuto, Upper Auto
+
+		Gui, Show, w439 h253, Arch Selection (Upper Arch Detected)
+
+		WinWaitClose, Arch Selection (Upper Arch Detected)
+	}
+
+	if (arches = "lower")
+	{
+		Gui, Add, Text, x30 y20 w300 h14 +Center, Manual Import:
+		Gui, Add, Button, x112 y40 w100 h30 gLowerManual, Lower Manual
+
+		Gui, Add, Text, x30 y120 w300 h14 +Center, Auto Import:
+		Gui, Add, Button, x112 y140 w100 h30 gLowerAuto, Lower Auto
+
+		Gui, Show, w439 h253, Arch Selection (Lower Arch Detected)
+
+		WinWaitClose, Arch Selection (Lower Arch Detected)
+	}
+	
+	return finishOptions
+}
+
+UpperManual:
+{
+	finishOptions["upper"] := True
+	finishOptions["auto"] := False
+	Gui, Destroy
+	return
+}
+
+LowerManual:
+{
+	finishOptions["lower"] := True
+	finishOptions["auto"] := False
+	Gui, Destroy
+	return
+}
+
+BothManual:
+{
+	finishOptions["upper"] := True
+	finishOptions["lower"] := True
+	finishOptions["auto"] := False
+	Gui, Destroy
+	return
+}
+
+UpperAuto:
+{
+	finishOptions["upper"] := True
+	finishOptions["auto"] := True
+	Gui, Destroy
+	return
+}
+
+LowerAuto:
+{
+	finishOptions["lower"] := True
+	finishOptions["auto"] := True
+	Gui, Destroy
+	return
+}
+
+BothAuto:
+{
+	finishOptions["upper"] := True
+	finishOptions["lower"] := True
+	finishOptions["auto"] := True
+	Gui, Destroy
 	return
 }

@@ -2,6 +2,8 @@
 ; Library for all Standalone functions pertaining to Netfabb
 ; ===========================================================================================================================
 
+placedengraving =: 0
+
 Netfabb_Level() ; starts leveling, finishes leveling after the click, and removes the max/man tags in engraving
 {
 	global
