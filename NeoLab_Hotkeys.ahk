@@ -173,11 +173,11 @@ f11:: ; While on patient page in myCadent, export STL
 
 	currentURL := Cadent_StillOpen()
 
-	Cadent_exportClick(currentURL)
+	Cadent_exportClick(currentURL) ; exports through the myCadent site, opens OrthoCAD
 
-	exportFilename := Cadent_exportOrthoCAD(patientInfo)
+	exportFilename := Cadent_exportOrthoCAD(patientInfo) ; exports the STL from OrthoCad, closes OrthoCAD
 
-	Cadent_moveSTLs(exportFilename)
+	Cadent_moveSTLs(exportFilename) ; moves exported STLs to the temp models folder
 
     return
 }
