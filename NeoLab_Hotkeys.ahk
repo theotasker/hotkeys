@@ -10,12 +10,12 @@
 CoordMode, Mouse, Client ; mouse and pixel coordinates will be based on the client, instead of screen or window. Most precise
 CoordMode, Pixel, Client
 
-#Include D:\hotkeys\Libraries\CaptureScreen.ahk ; 3rd party library, must be in 32bit mode in AHK
-#Include D:\hotkeys\Web_Paths.ahk
-#Include D:\hotkeys\Libraries\Neo_Functions.ahk
-#Include D:\hotkeys\Libraries\Cadent_Functions.ahk
-#Include D:\hotkeys\Libraries\Netfabb_Functions.ahk
-#Include D:\hotkeys\Libraries\Ortho_Functions.ahk
+#Include %A_ScriptDir%\Libraries\CaptureScreen.ahk ; 3rd party library, must be in 32bit mode in AHK
+#Include %A_ScriptDir%\Web_Paths.ahk
+#Include %A_ScriptDir%\Libraries\Neo_Functions.ahk
+#Include %A_ScriptDir%\Libraries\Cadent_Functions.ahk
+#Include %A_ScriptDir%\Libraries\Netfabb_Functions.ahk
+#Include %A_ScriptDir%\Libraries\Ortho_Functions.ahk
 
 ; default progress bar location
 global progressBarX := "x788"
@@ -547,4 +547,4 @@ AddAnimatedGIF(imagefullpath , x="", y="", w="", h="", guiname = "1")
 	return "AG" AGcount
 }
 
-#Include D:\hotkeys\Libraries\Gui.ahk
+#Include %A_ScriptDir%\Libraries\Gui.ahk
