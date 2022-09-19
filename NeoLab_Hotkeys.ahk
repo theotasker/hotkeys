@@ -27,7 +27,6 @@ global autoImportDir := "D:\AutoImport\Input\"
 global tempModelsDir := A_MyDocuments "\Temp Models\"
 global screenshotDir := A_MyDocuments "\Automation\Screenshots"
 
-
 ; ===========================================================================================================================
 ; Engraving shortcuts in Netfabb
 ; ===========================================================================================================================
@@ -46,18 +45,8 @@ f2::
 	return
 }
 
-f3:: 
+f3:: ; just for testing, for now
 {
-
-	Driver := ComObjCreate("Selenium.ChromeDriver")
-	Driver.SetCapability("debuggerAddress", "127.0.0.1:9222")
-	Driver.Start()
-
-
-	Driver.Get("google.com")
-
-
-
 	return
 }
 
@@ -80,17 +69,17 @@ f5:: ; Swap between review and edit pages
 
 f6:: ; hit start/stop button for case, must be on review or edit page
 {
-    Neo_swapPages(destPage:="review")
+    ; Neo_swapPages(destPage:="review")
 
-	needStop := Neo_start(currentStep:=currentStep)
+	; needStop := Neo_start(currentStep:=currentStep)
 
-	if (Needstop = True)
-	{
-		Neo_stop(currentStep:=currentStep)
-	}
-	Sleep, 1000
+	; if (Needstop = True)
+	; {
+	; 	Neo_stop(currentStep:=currentStep)
+	; }
+	; Sleep, 1000
 
-	Neo_activate(scanField:=true)
+	; Neo_activate(scanField:=true)
 
 	return
 }
@@ -410,7 +399,7 @@ parseArches() {
 		tagCheck := False
 		for key, tag in tagsUpper ; check against upper tags
 		{
-			if instr(filename, tag) ; if the filename has an upper tag
+			if instr(filename, tag) ; if the filename has this upper tag
 			{
 				if (archFilenames["upper"] != False)  ; if there's already an upper saved
 				{
