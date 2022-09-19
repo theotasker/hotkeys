@@ -27,7 +27,6 @@ global autoImportDir := "D:\AutoImport\Input\"
 global tempModelsDir := A_MyDocuments "\Temp Models\"
 global screenshotDir := A_MyDocuments "\Automation\Screenshots"
 
-
 ; ===========================================================================================================================
 ; Engraving shortcuts in Netfabb
 ; ===========================================================================================================================
@@ -43,6 +42,11 @@ f1::
 f2:: 
 {
 	Netfabb_finish()
+	return
+}
+
+f3:: ; just for testing, for now
+{
 	return
 }
 
@@ -65,17 +69,17 @@ f5:: ; Swap between review and edit pages
 
 f6:: ; hit start/stop button for case, must be on review or edit page
 {
-    Neo_swapPages(destPage:="review")
+    ; Neo_swapPages(destPage:="review")
 
-	needStop := Neo_start(currentStep:=currentStep)
+	; needStop := Neo_start(currentStep:=currentStep)
 
-	if (Needstop = True)
-	{
-		Neo_stop(currentStep:=currentStep)
-	}
-	Sleep, 1000
+	; if (Needstop = True)
+	; {
+	; 	Neo_stop(currentStep:=currentStep)
+	; }
+	; Sleep, 1000
 
-	Neo_activate(scanField:=true)
+	; Neo_activate(scanField:=true)
 
 	return
 }
@@ -86,17 +90,16 @@ f6:: ; hit start/stop button for case, must be on review or edit page
 
 f7:: ; retrieve patient info from RXWizard and perform advanced search inside OrthoAnalyzer
 {
-	patientInfo := Neo_getInfoFromReview()
+	patientInfo := neo_getPatientInfo()
 
 	Ortho_AdvSearch(patientInfo)
 
-	BlockInput, MouseMoveOff
     return
 }
 
 f8:: ; Create new patient if non exists, then create model set
 {
-	patientInfo := Neo_getInfoFromReview()
+	patientInfo := neo_getPatientInfo()
 
 	ortho_createModelSet(patientInfo)
 
@@ -152,7 +155,12 @@ f9:: ; for importing, returns to patient info and deletes temp STLs. for preppin
 
 f10:: ; get patient info from RXWizard and search in myCadent
 {
-	patientInfo := Neo_getInfoFromReview()
+	if !Cadent_StillOpen()
+	{
+		return
+	}
+	
+	patientInfo := neo_getPatientInfo()
 
     Cadent_ordersPage(patientInfo, patientSearch:=True)
 
@@ -161,22 +169,22 @@ f10:: ; get patient info from RXWizard and search in myCadent
 
 f11:: ; While on patient page in myCadent, export STL
 {
-	patientInfo := Neo_getInfoFromReview()
+	patientInfo := neo_getPatientInfo()
 
 	currentURL := Cadent_StillOpen()
 
-	Cadent_exportClick(currentURL)
+	Cadent_exportClick(currentURL) ; exports through the myCadent site, opens OrthoCAD
 
-	exportFilename := Cadent_exportOrthoCAD(patientInfo)
+	exportFilename := Cadent_exportOrthoCAD(patientInfo) ; exports the STL from OrthoCad, closes OrthoCAD
 
-	Cadent_moveSTLs(exportFilename)
+	Cadent_moveSTLs(exportFilename) ; moves exported STLs to the temp models folder
 
     return
 }
 
 f12:: ; renames arches in temp models folder, asks user for arch selection and auto vs manual importing, moves files
 {
-	patientInfo := neo_getInfoFromReview()
+	patientInfo := neo_getPatientInfo()
 
 	existingArchFilenames := parseArches()
 
@@ -209,7 +217,7 @@ Insert::
 
 	else ; If on any other step, takes bite screenshots in ortho and uploads them to the website
 	{
-		patientInfo := Neo_getInfoFromReview()
+		patientInfo := neo_getPatientInfo()
 
 		screenshotDir := Ortho_takeBitePics(patientInfo)
 
@@ -391,7 +399,7 @@ parseArches() {
 		tagCheck := False
 		for key, tag in tagsUpper ; check against upper tags
 		{
-			if instr(filename, tag) ; if the filename has an upper tag
+			if instr(filename, tag) ; if the filename has this upper tag
 			{
 				if (archFilenames["upper"] != False)  ; if there's already an upper saved
 				{

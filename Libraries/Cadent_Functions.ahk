@@ -1,45 +1,37 @@
-Cadentcheck := 0
+global Cadentcheck := 0
+global MyCadentDriver := ""
 
 Cadent_StartWebDriver()
 {
-	global
-
-	; Check to make sure that the modified Chrome shortcut is in the right place
-	chromelocation = %A_MyDocuments%\Automation\ChromeForAHK.lnk
-	if !FileExist(chromelocation)
+	if !FileExist(chromeShortcutDir "ChromeForAHK.lnk")
 	{
 		MsgBox,, Chrome Shortcut Not Found, Can't find the proper shortcut at %A_MyDocuments%\Automation\ChromeForAHK.lnk `nRemember to modify the shortcut to run in debug mode by adding "--remote-debugging-port=9222"
 		Exit
 	}
 
-	; Open another window and assign it to mycadent
-	Run, ChromeForAHK.lnk, %A_MyDocuments%\Automation\
+	Run, ChromeForAHK.lnk, %chromeShortcutDir%
 	Sleep, 500
-	MyCadentDriver := ChromeGet()
+	global MyCadentDriver := ChromeGet()
+	MyCadentDriver.SwitchToWindowByTitle("New Tab")
 	MyCadentDriver.Get("https://mycadent.com/COrdersList.aspx")
 
 	CadentCheck := 1
 
-	Gui, Destroy
-	Exit
+	return MyCadentDriver
 }
 
-; function to check that Cadent is still open
-Cadent_StillOpen()
+Cadent_StillOpen() ; Checks to see if cadent driver is open, reopens if not
 {
-	global MyCadentDriver, CadentCheck
-
 	if CadentCheck = 0
 	{
-		Gui, Destroy
 		MsgBox, 4, Open CadentDriver?, No instance of CadentDriver found, initiate?
 			IfMsgBox, Yes
 			{
-				Cadent_StartWebDriver()
+				global MyCadentDriver := Cadent_StartWebDriver()
+				return False
 			}
 			IfMsgBox, No
 			{
-				Gui, Destroy
 				Exit
 			}
 	}
@@ -49,24 +41,19 @@ Cadent_StillOpen()
 	{
 		MsgBox, 4, Webdriver Error, The tab for driving MyCadent was closed, reinitiate webdriver?
 			IfMsgBox, Yes
-				Cadent_StartWebDriver()
+				global MyCadentDriver := Cadent_StartWebDriver()
+				return False
 			IfMsgBox, No
 			{
 				return
 			}
-		Gui, Destroy
 		Exit
 	}
 	return currentURL
 }
 
-; function to go to orders page
-Cadent_ordersPage(patientInfo, patientSearch)
+Cadent_ordersPage(patientInfo, patientSearch) ; goes to the patient search page, enters patient info if asked
 {
-	global MyCadentDriver, Path_CadentSearchFieldID
-	Cadent_StillOpen()
-
-	; Check the current page of the cadent driver
 	if (MyCadentDriver.Url != "https://mycadent.com/COrdersList.aspx")
     {
         MyCadentDriver.Get("https://mycadent.com/COrdersList.aspx")
@@ -77,25 +64,23 @@ Cadent_ordersPage(patientInfo, patientSearch)
 	else
 	{
 		MsgBox The MyCadent site must be on the top tab for this shortcut to work
-		Gui, Destroy
 		Exit
 	}
 
-	Sleep, 100
-	Send, {tab}
-	Sleep, 100
+	Send, {tab}{tab}{tab}
+	sleep, 100
+
     MyCadentDriver.findElementByID(Path_CadentSearchFieldID).click()
 	Sleep, 100
 	Send, {CtrlDown}a{CtrlUp}
+	sleep, 100
 
 	if (patientSearch = True) {
 		if StrLen(patientInfo["firstName"]) > 1 and StrLen(patientInfo["lastName"]) > 1
 		{
-			BlockInput, MouseMove
 			Send % patientInfo["lastName"]
 			Send {,}{space}
 			Send % patientInfo["firstName"]
-			BlockInput, MouseMoveOff
 		}
 	}
 	return
@@ -103,13 +88,12 @@ Cadent_ordersPage(patientInfo, patientSearch)
 
 Cadent_exportClick(currentURL) 
 {
-	global MyCadentDriver, Path_CadentExport
 	if !InStr(currentURL, "https://mycadent.com/CaseInfo.aspx") {
 		MsgBox,, Wrong Page, Must be on a case page in MyCadent
 		Exit
 	}
 
-	try MyCadentDriver.findElementByID(Path_CadentExport).click() ; click on the export button
+	try MyCadentDriver.findElementByID(Path_CadentExport).click() 
 	catch e {
 		Msgbox,, Web Error, Couldn't click on the export button on MyCadent
 		Exit
@@ -252,8 +236,6 @@ Cadent_moveSTLs(exportFilename)
 
 Cadent_GetOrderID()
 {
-	global MyCadentDriver, Path_CadentOrderNumberID
-
 	Cadent_StillOpen()
 
 	if !InStr(MyCadentDriver.Url, "https://mycadent.com/CaseInfo.aspx")
