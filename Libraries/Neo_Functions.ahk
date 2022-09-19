@@ -230,6 +230,8 @@ neo_getPatientInfo() ; retrieves and returns patient info from review/edit pages
 	patientInfo["scriptNumber"] := StrReplace(patientInfo["scriptNumber"], "Case ")
 	patientInitials := SubStr(patientInfo["firstName"], 1, 1) SubStr(patientInfo["lastName"], 1, 1)
 	patientInfo["engravingBarcode"] := StrSplit(patientInfo["scriptNumber"], "-")[2] "-" patientInitials "-" patientInfo["panNumber"]
+	patientInfo["clinicName"] := StrReplace(patientInfo["clinicName"], "#", "")
+	patientInfo["clinicName"] := StrReplace(patientInfo["clinicName"], ".", "")
 
     return patientInfo
 }

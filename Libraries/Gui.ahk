@@ -96,7 +96,7 @@ SetBox()
 	return
 }
 
-progressBar(action, percent)
+Gui_progressBar(action, percent)
 {
 	global
 	if (action = "create")
@@ -117,7 +117,7 @@ progressBar(action, percent)
 	return
 }
 
-finishImportGUI(arches) 
+Gui_finishImport(arches) 
 {
 	global finishOptions := {"upper":False, "lower":False, "auto":False}
 	if (arches = "both")
