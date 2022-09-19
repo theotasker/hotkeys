@@ -24,7 +24,7 @@ global progressBarY := "y150"
 ; Directories
 ; ===========================================================================================================================
 
-global autoImportDir := "D:\AutoImport\Input\"
+global autoImportDir := "\\NEO-AUTOMATE\AutoImport\Input\"
 global tempModelsDir := A_MyDocuments "\Temp Models\"
 global screenshotDir := A_MyDocuments "\Automation\Screenshots"
 
@@ -513,5 +513,3 @@ AddAnimatedGIF(imagefullpath , x="", y="", w="", h="", guiname = "1")
 }
 
 #Include %A_ScriptDir%\Libraries\Gui.ahk
-
-; test
