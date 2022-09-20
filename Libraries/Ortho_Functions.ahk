@@ -289,28 +289,30 @@ Ortho_takeBitePics(patientInfo)
 	BlockInput MouseMove
 
 	if !WinExist("ahk_group ThreeShape")
-		{
-			BlockInput MouseMoveOff
-        	Gui, Destroy
-			MsgBox,, Wrong Window, Case must be open in OrthoAnalyzer or ApplianceDesigner
-			Exit
-		}
+	{
+		BlockInput MouseMoveOff
+		Gui, Destroy
+		MsgBox,, Wrong Window, Case must be open in OrthoAnalyzer or ApplianceDesigner
+		Exit
+	}
+
+	WinActivate, ahk_group ThreeShape
+	WinWaitActive, ahk_group ThreeShape
 
 	FileRemoveDir, %screenshotDir%, 1
 	FileCreateDir, %screenshotDir%
-
 	screenshotName := patientInfo["firstName"] patientInfo["lastName"]
 
-	Ortho_View(3shapeButtons["frontViewY"], 3shapeButtons["bottomViewY"], topTick)
+	quickClick(3shapeButtons["allViewX"], 3shapeButtons["frontViewY"])
 	Sleep, 500
 	CaptureScreen(screenshotName "Front.jpg") ; function defined in CaptureScreen Library
 
-	Ortho_View(3shapeButtons["leftViewY"], 3shapeButtons["bottomViewY"], topTick)
+	quickClick(3shapeButtons["allViewX"], 3shapeButtons["leftViewY"])
 	Sleep, 500
 
 	CaptureScreen(screenshotName "Left.jpg")
 
-	Ortho_View(3shapeButtons["rightViewY"], 3shapeButtons["bottomViewY"], topTick)
+	quickClick(3shapeButtons["allViewX"], 3shapeButtons["rightViewY"])
 	Sleep, 500
 
 	CaptureScreen(screenshotName "Right.jpg")

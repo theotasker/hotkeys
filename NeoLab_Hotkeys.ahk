@@ -34,7 +34,7 @@ global screenshotDir := A_MyDocuments "\Automation\Screenshots"
 ; ===========================================================================================================================
 #IfWinNotActive ahk_exe explorer.exe ; these shouldn't overwrite the default windows functions
 
-f1::
+f1:: ; Advanced search active RXWizard patient in 3Shape using script number
 {
 	Gui_progressBar(action:="create", percent:=0)
 
@@ -47,7 +47,7 @@ f1::
 	return
 }
 
-f2:: 
+f2:: ; takes snapshot from 3shape and uploads to RXWizard
 {
 	Gui_progressBar(action:="create", percent:=0)
 
