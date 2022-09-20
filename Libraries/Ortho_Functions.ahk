@@ -66,17 +66,39 @@ Ortho_AdvSearch(patientInfo, searchMethod) ; function to enter patient name into
     Send, {Enter}
     Sleep, 400
 
+	; ===========================================================================================================================
+	; Added to check the search field locator between 2019 and 2021
+
+	if (3shapeFields["advSearchScript"] = "")
+	{
+		quickClick(3shapeFields["advSearchScriptX"], 3shapeFields["advSearchScriptY"])
+		Sleep, 200
+		controlGetFocus, scriptHandle, Open patient case
+		if (scriptHandle = 3shapeFields["advSearchScript2019"])
+		{
+			global 3ShapeVersion := "2019"
+			3shapeFields["advSearchScript"] := 3shapeFields["advSearchScript2019"]
+		}
+		else if (scriptHandle = 3shapeFields["advSearchScript2021"])
+		{
+			global 3ShapeVersion := "2021"
+			3shapeFields["advSearchScript"] := 3shapeFields["advSearchScript2021"]
+		}
+	}
+
+	; ===========================================================================================================================
+
 	if (searchMethod = "patientName")
 	{
 		ortho_sendText(patientInfo["firstName"], 3shapeFields["advSearchFirst"], "Open patient case")
 		ortho_sendText(patientInfo["lastName"], 3shapeFields["advSearchLast"], "Open patient case")
 		ortho_sendText(patientInfo["clinicName"], 3shapeFields["advSearchClinic"], "Open patient case")
 
-		ortho_sendText("", 3shapeFields["advSearchScript2019"], "Open patient case")
+		ortho_sendText("", 3shapeFields["advSearchScript"], "Open patient case")
 	}
 	else 
 	{
-		ortho_sendText(patientInfo["scriptNumber"], 3shapeFields["advSearchScript2019"], "Open patient case")
+		ortho_sendText(patientInfo["scriptNumber"], 3shapeFields["advSearchScript"], "Open patient case")
 
 		ortho_sendText("", 3shapeFields["advSearchFirst"], "Open patient case")
 		ortho_sendText("", 3shapeFields["advSearchLast"], "Open patient case")

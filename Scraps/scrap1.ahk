@@ -5,9 +5,9 @@ CoordMode, Pixel, Client
 
 f3::
 {
-    controlGetFocus, temp
+    controlGetFocus, returnVar, Open patient case
 
-    msgbox % temp
+    msgbox % returnVar
 
-
+    return
 }
