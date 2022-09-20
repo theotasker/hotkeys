@@ -24,14 +24,13 @@ global progressBarY := "y150"
 ; Directories
 ; ===========================================================================================================================
 
-global autoImportDir := "D:\AutoImport\Input\"
+global autoImportDir := "\\NEO-AUTOMATE\AutoImport\Input\"
 global tempModelsDir := A_MyDocuments "\Temp Models\"
 global screenshotDir := A_MyDocuments "\Automation\Screenshots"
 
 ; ===========================================================================================================================
 ; Prepping Shortcuts
 ; ===========================================================================================================================
-
 #IfWinNotActive ahk_exe explorer.exe ; these shouldn't overwrite the default windows functions
 
 f1::
@@ -489,14 +488,12 @@ finalizeSTLs(finishOptions, existingArchFilenames, filenameBase) {
 ^u::
 {
 	if GetKeyState("f") = 1
-	{
-
-		AnimPicFile := "\\APP03\Scans\~Digital Dept Share\R&D Network\Scripting\AutoHotKey\Files\JP.gif"
+	{							
+		AnimPicFile := A_ScriptDir "\Files\JP.gif"
 		Gui, +ToolWindow
 		AGif := AddAnimatedGIF(AnimPicFile)
 		Gui, Show
 		return
-
 	}
 }
 
