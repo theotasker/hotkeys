@@ -1,6 +1,6 @@
 # Hotkeys
 
-Contains all files and dependencies for running NeoLab_Hotkeys.ahk, which automates importing and prepping functions.
+Contains all files and dependencies for running NeoLab_Hotkeys.ahk, which automates importing and prepping functions through website scraping, data entry, file handling, click/keystroke replication, and command line functions.
 
 Neolab_Hotkeys.ahk is the main script. It has dependencies on several custom .ahk libraries, organized by target program, in the \Libraries\ folder, in an attempt to keep the main script as readable as possible.
 
