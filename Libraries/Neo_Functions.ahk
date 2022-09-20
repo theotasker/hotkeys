@@ -289,7 +289,7 @@ neo_newNote(orderID) ; Puts new note onto the edit page
 	{
 		BlockInput, MouseMoveOff
 		Gui, Destroy
-		MsgBox,, Couldn't Find Element, Couldn't find the note text box
+		MsgBox,, Couldn't Find Element, Couldn't find the note save button
 		Gui, Destroy
 		Exit
 	}
