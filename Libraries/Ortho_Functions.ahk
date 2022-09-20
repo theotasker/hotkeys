@@ -163,21 +163,9 @@ ortho_createModelSet(patientInfo)
     return
 }
 
-Ortho_Export() ; While in model edit, clicks the green check mark and exports model
+Ortho_Export() ; At end of model edit, waits for patient browser then exports STL
 {
 	BlockInput MouseMove
-	if !WinExist("ahk_group ThreeShape")
-	{
-		BlockInput MouseMoveOff
-		Gui, Destroy
-		MsgBox,, Wrong Window, Must be in a case to use this function
-		return
-	}
-
-	BlockInput MouseMove
-	WinActivate ahk_group ThreeShape
-	Click, 1088, 95 ; Check Mark
-	BlockInput MouseMoveOff
 
 	WinWaitActive, Open patient case,, 30
 	if ErrorLevel
@@ -187,12 +175,11 @@ Ortho_Export() ; While in model edit, clicks the green check mark and exports mo
 		MsgBox,, Timeout Error, "Open Patient Case" window took too long to open
 		Exit
 	}
-	
-	BlockInput MouseMove ; Export Clicks
+
 	Sleep, 200
-	Click, 389, 46
+	quickClick(3shapeButtons["modelExportX"], 3shapeButtons["modelExportY"])
 	Sleep, 100
-	Send {Down 6}
+	Send {Up 2}
 	Sleep, 100
 	Send {Enter}
 
@@ -205,6 +192,7 @@ Ortho_Export() ; While in model edit, clicks the green check mark and exports mo
 		Exit
 	}
 
+	Send, {Enter}
 	BlockInput MouseMoveOff
 	return
 }
@@ -344,8 +332,6 @@ Ortho_Wax(firstKnife, secondKnife, lastTick) ; Tool for swapping out wax knifes
 	return currentTick
 }
 
-
-
 Ortho_takeBitePics(patientInfo) 
 {
 	BlockInput MouseMove
@@ -383,7 +369,6 @@ Ortho_takeBitePics(patientInfo)
 	return screenshotDir
 }
 
-
 Ortho_toolSelect(selectedTool) ; select or apply specified tool
 {
 	ControlGetText, PrepStep, TdfInfoCaption2, ahk_group ThreeShape
@@ -393,7 +378,7 @@ Ortho_toolSelect(selectedTool) ; select or apply specified tool
 	}
 	ControlGetText, activeTool, TdfGroupInfo1, Feature
 
-	WinActivate Feature, Sculpt toolkit
+	WinActivate Feature, Sculpt toolkit ; the window inside 3Shape with the tool buttons on it
 
 	if (selectedTool = "splineCut")
 	{
@@ -429,4 +414,28 @@ Ortho_toolSelect(selectedTool) ; select or apply specified tool
 		}
 	}
 	return 
+}
+
+Ortho_nextButton()
+{
+	WinActivate ahk_group ThreeShape
+	ControlGetText, currentPrepStep, TdfInfoCaption2, ahk_group ThreeShape
+	ControlGetText, checkBoxText, TCheckBox5, Virtual Base
+	
+	if (InStr("Virtual base", currentPrepStep) and (checkBoxText = "Decimate base to")) ; on the "fit base" step, set curve to 0
+	{
+		ortho_sendText("0", 3shapeFields["baseCurve"], "Virtual Base")
+		WinActivate ahk_group ThreeShape
+		quickClick(3shapeButtons["nextButtonX"], 3shapeButtons["nextButtonY"])
+	}
+	else if InStr("Prepare occlusion,Setup plane alignment,Sculpt maxillary,Sculpt mandibular,Virtual base", currentPrepStep)
+	{
+		quickClick(3shapeButtons["nextButtonX"], 3shapeButtons["nextButtonY"])
+	}
+	else if InStr("Finish", currentPrepStep)
+	{
+		quickClick(3shapeButtons["nextButtonX"], 3shapeButtons["nextButtonY"])
+		return true
+	}
+	return false
 }

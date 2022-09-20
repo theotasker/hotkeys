@@ -273,11 +273,11 @@ SettitleMatchMode, 1
 
 !+g:: ; hits "next" button in 3shape prepping
 {
-	ControlGetText, PrepStep, TdfInfoCaption2, ahk_group ThreeShape
-
-	if InStr("Prepare occlusion,Setup plane alignment,Virtual base,Sculpt maxillary,Sculpt mandibular", PrepStep)
-		WinActivate ahk_group ThreeShape
-		quickClick(3shapeButtons["nextButtonX"], 3shapeButtons["nextButtonY"])
+	readyToExport := Ortho_nextButton()
+	if (readyToExport = true)
+	{
+		Ortho_Export()
+	}
 	return
 }
 

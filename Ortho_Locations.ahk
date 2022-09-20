@@ -43,6 +43,8 @@ global 3shapeButtons := {"":""
 , "newPatientModelY":"46"
 , "patientBrowserX":"27"
 , "patientBrowserY":"43"
+, "modelExportX":"389"
+, "modelExportY":"46"
 , "":""}
 
 global 3shapeFields := {"":""
@@ -60,4 +62,5 @@ global 3shapeFields := {"":""
 , "newPatientLast":"TEdit9"
 , "newPatientClinic":"Edit1"
 , "newModelScript":"TEdit5"
+, "baseCurve":"TEdit1"
 , "":""}
