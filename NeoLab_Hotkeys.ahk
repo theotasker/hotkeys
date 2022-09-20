@@ -12,6 +12,7 @@ CoordMode, Pixel, Client
 
 #Include %A_ScriptDir%\Libraries\CaptureScreen.ahk ; 3rd party library, must be in 32bit mode in AHK
 #Include %A_ScriptDir%\Web_Paths.ahk
+#Include %A_ScriptDir%\Ortho_Locations.ahk
 #Include %A_ScriptDir%\Libraries\Neo_Functions.ahk
 #Include %A_ScriptDir%\Libraries\Cadent_Functions.ahk
 #Include %A_ScriptDir%\Libraries\Ortho_Functions.ahk
@@ -237,25 +238,25 @@ SettitleMatchMode, 1
 
 !+t:: ; top/bottom view
 {
-    topTick := Ortho_View(topViewY, bottomViewY, topTick)
+    topTick := Ortho_View(3shapeButtons["topViewY"], 3shapeButtons["bottomViewY"], topTick)
 	return
 }
 
 !+r:: ; right/left view
 {
-	sideTick := Ortho_View(rightViewY, leftViewY, sideTick)
+	sideTick := Ortho_View(3shapeButtons["rightViewY"], 3shapeButtons["leftViewY"], sideTick)
 	return
 }
 
 !+f:: ; front/back view
 {
-	frontTick := Ortho_View(frontViewY, backViewY, frontTick)
+	frontTick := Ortho_View(3shapeButtons["frontViewY"], 3shapeButtons["backViewY"], frontTick)
 	return
 }
 
 !+c::  ; Transparency
 {
-	Ortho_View(transparencyY, transparencyY, topTick)
+	Ortho_View(3shapeButtons["transparencyY"], 3shapeButtons["transparencyY"], topTick)
 	return
 }
 
@@ -282,7 +283,7 @@ SettitleMatchMode, 1
 
 	if InStr("Prepare occlusion,Setup plane alignment,Virtual base,Sculpt maxillary,Sculpt mandibular", PrepStep)
 		WinActivate ahk_group ThreeShape
-		quickClick(nextButtonX, nextButtonY)
+		quickClick(3shapeButtons["nextButtonX"], 3shapeButtons["nextButtonY"])
 	return
 }
 
@@ -321,7 +322,7 @@ SettitleMatchMode, 1
 	}
 
 	WinActivate ahk_group ThreeShape
-	quickClick(artifactX, artifactY)
+	quickClick(3shapeButtons["artifactX"], 3shapeButtons["artifactY"])
 	return
 }
 
@@ -335,7 +336,7 @@ SettitleMatchMode, 1
 	}
 
 	WinActivate ahk_group ThreeShape
-	quickClick(planeCutX, planeCutY)
+	quickClick(3shapeButtons["planeCutX"], 3shapeButtons["planeCutY"])
 	return
 }
 
@@ -349,11 +350,11 @@ SettitleMatchMode, 1
 	}
 
 	WinActivate ahk_group ThreeShape
-	quickClick(splineCutX, splineCutY)
+	quickClick(3shapeButtons["splineCutX"], 3shapeButtons["splineCutY"])
 	BlockInput MouseMove
 	Sleep, 100
 	WinActivate ahk_group ThreeShape
-	quickClick(splineSmoothX, splineSmoothY)
+	quickClick(3shapeButtons["splineSmoothX"], 3shapeButtons["splineSmoothY"])
 	return
 }
 

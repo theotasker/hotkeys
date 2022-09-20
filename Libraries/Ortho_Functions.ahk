@@ -6,31 +6,6 @@
 ; Constants and groups
 ; ===========================================================================================================================
 
-; constants for 3Shape button positions
-global allViewX := 1902
-global topViewY := 286
-global bottomViewY := 253
-global rightViewY := 215
-global leftViewY := 177
-global frontViewY := 106
-global backViewY := 140
-global transparencyY := 800
-global transparencyY := 800
-
-global artifactX := 120
-global artifacty := 173
-global planeCutX := 165
-global planeCutY := 175
-global splineCutX := 205
-global splineCutY := 175
-global splineSmoothX := 195
-global splineSmoothY := 300
-global waxKnifeX := 35
-global waxKnifeY := 175
-
-global nextButtonX := 190
-global nextButtonY := 30
-
 ; starting ticks for double-tap functions for 3D mouse
 topTick := A_TickCount
 sideTick := A_TickCount
@@ -72,14 +47,14 @@ Ortho_AdvSearch(patientInfo, searchMethod) ; function to enter patient name into
         Exit
     }
 
-    WinActivate, ahk_exe OrthoAnalyzer.exe
+    WinActivate, ahk_group ThreeShapeExe
     WinWaitActive, Open patient case,, 10
 
     if ErrorLevel
     {
 		BlockInput MouseMoveOff
 		Gui, Destroy
-        MsgBox, Couldn't get focus on Ortho Analyzer
+        MsgBox, Couldn't get focus on 3Shape
         return
     }
     Sleep, 200
@@ -91,18 +66,18 @@ Ortho_AdvSearch(patientInfo, searchMethod) ; function to enter patient name into
 
 	if (searchMethod = "patientName")
 	{
-		ortho_sendText(patientInfo["firstName"], "TEdit10", "Open patient case")
+		ortho_sendText(patientInfo["firstName"], 3shapeFields["advSearchFirst"], "Open patient case")
 
-		ortho_sendText(patientInfo["lastName"], "TEdit9", "Open patient case")
+		ortho_sendText(patientInfo["lastName"], 3shapeFields["advSearchLast"], "Open patient case")
 
-		ortho_sendText(patientInfo["clinicName"], "Edit1", "Open patient case")
+		ortho_sendText(patientInfo["clinicName"], 3shapeFields["advSearchClinic"], "Open patient case")
 	}
 	else 
 	{
-		ortho_sendText(patientInfo["scriptNumber"], "TEdit16", "Open patient case")
+		ortho_sendText(patientInfo["scriptNumber"], 3shapeFields["advSearchScript2019"], "Open patient case")
 	}
 
-	ControlFocus, TButton2, Open patient case
+	ControlFocus, 3shapeFields["advSearchGo"], Open patient case
 	Send {enter}
 	Sleep, 100
 	Send {down}
@@ -124,7 +99,7 @@ ortho_createModelSet(patientInfo)
     }
 
     WinActivate Open patient case
-	quickClick("78", "46")
+	quickClick(3shapeButtons["newPatientModelX"], 3shapeButtons["newPatientModelY"])
 
     ; see which window opens
     WinWaitActive, ahk_group ThreeShapePatient,, 5
@@ -139,18 +114,14 @@ ortho_createModelSet(patientInfo)
     SetTitleMatchMode, 3
     if WinActive("New patient info",, model)
     {
-        BlockInput, MouseMove
-		ortho_sendText(patientInfo["firstName"] patientInfo["lastName"], "TEdit4", "New patient info")
-		ortho_sendText(patientInfo["firstName"], "TEdit10", "New patient info")
-		ortho_sendText(patientInfo["lastName"], "TEdit9", "New patient info")
-		ortho_sendText(patientInfo["clinicName"], "Edit1", "New patient info")
-        BlockInput, MouseMoveOff
+		ortho_sendText(patientInfo["firstName"] patientInfo["lastName"], 3shapeFields["newPatientExt"], "New patient info")
+		ortho_sendText(patientInfo["firstName"], 3shapeFields["newPatientFirst"], "New patient info")
+		ortho_sendText(patientInfo["lastName"], 3shapeFields["newPatientLast"], "New patient info")
+		ortho_sendText(patientInfo["clinicName"], 3shapeFields["newPatientClinic"], "New patient info")
     }
     else if WinActive("New patient model set info")
     {
-        ControlFocus, TEdit5
-        Sleep, 100
-        Send, % patientInfo["scriptNumber"]
+		ortho_sendText(patientInfo["scriptNumber"], 3shapeFields["newModelScript"], "New patient model set info")
     }
     else
     {
@@ -174,7 +145,7 @@ Ortho_View(firstViewY, secondViewY, lastActionTick) ; clicks the view button dec
 	if currentTick - lastActionTick > 1000
 	{
 		WinActivate ahk_group ThreeShape
-		quickClick(allViewX, firstViewY)
+		quickClick(3shapeButtons["allViewX"], firstViewY)
 		toggle := 1
 	}
 	else
@@ -182,14 +153,14 @@ Ortho_View(firstViewY, secondViewY, lastActionTick) ; clicks the view button dec
 		if toggle = 1
 		{
 			WinActivate ahk_group ThreeShape
-			quickClick(allViewX, secondViewY)
+			quickClick(3shapeButtons["allViewX"], secondViewY)
 
 			toggle := 2
 		}
 		else if toggle = 2
 		{
 			WinActivate ahk_group ThreeShape
-			quickClick(allViewX, firstViewY)
+			quickClick(3shapeButtons["allViewX"], firstViewY)
 			toggle := 1
 		}
 	}
@@ -253,7 +224,7 @@ Ortho_Wax(firstKnife, secondKnife, lastTick) ; Tool for swapping out wax knifes
 
 	if PrepTool != "Wax knife settings"
 		WinActivate ahk_group ThreeShape
-		quickClick(waxKnifeX, waxKnifeY)
+		quickClick(3shapeButtons["waxKnifeX"], 3shapeButtons["waxKnifeY"])
 	currentTick := A_TickCount
 	if currentTick - lastTick > 900
 	{
@@ -330,16 +301,16 @@ Ortho_takeBitePics(patientInfo)
 
 	screenshotName := patientInfo["firstName"] patientInfo["lastName"]
 
-	Ortho_View(frontViewY, bottomViewY, topTick)
+	Ortho_View(3shapeButtons["frontViewY"], 3shapeButtons["bottomViewY"], topTick)
 	Sleep, 500
 	CaptureScreen(screenshotName "Front.jpg") ; function defined in CaptureScreen Library
 
-	Ortho_View(leftViewY, bottomViewY, topTick)
+	Ortho_View(3shapeButtons["leftViewY"], 3shapeButtons["bottomViewY"], topTick)
 	Sleep, 500
 
 	CaptureScreen(screenshotName "Left.jpg")
 
-	Ortho_View(rightViewY, bottomViewY, topTick)
+	Ortho_View(3shapeButtons["rightViewY"], 3shapeButtons["bottomViewY"], topTick)
 	Sleep, 500
 
 	CaptureScreen(screenshotName "Right.jpg")
@@ -348,24 +319,24 @@ Ortho_takeBitePics(patientInfo)
 	return screenshotDir
 }
 
-ortho_sendText(to_send, target_box, target_window)
+ortho_sendText(textToSend, targetBox, targetWindow)
 {
-	While(return_text != to_send && loop_check < 5)
+	While(returnText != textToSend && loopCheck < 5)
 	{
-		ControlFocus, %target_box%, %target_window%
+		ControlFocus, %targetBox%, %targetWindow%
 		Sleep, 100
 		Send, ^a
 		Sleep, 100
 		Send, {del}
 		Sleep, 100
-		Send, %to_send%
+		Send, %textToSend%
 		Sleep, 100
 		Send, {del}
 		Sleep, 100
-		ControlGetText, return_text, %target_box%, %target_window%
-		loop_check++
+		ControlGetText, returnText, %targetBox%, %targetWindow%
+		loopCheck++
 	}
-	If(return_text != to_send)
+	If(returnText != textToSend)
 	{
 		return False
 	}
