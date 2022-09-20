@@ -1,5 +1,13 @@
+; ===========================================================================================================================
+; Library for Cadent_ functions
+; ===========================================================================================================================
+
 global Cadentcheck := 0
 global MyCadentDriver := ""
+
+; ===========================================================================================================================
+; myCadent site functions
+; ===========================================================================================================================
 
 Cadent_StartWebDriver()
 {
@@ -93,6 +101,23 @@ Cadent_ordersPage(patientInfo, patientSearch) ; goes to the patient search page,
 	return
 }
 
+Cadent_GetOrderID()
+{
+	Cadent_StillOpen()
+
+	if !InStr(MyCadentDriver.Url, "https://mycadent.com/CaseInfo.aspx")
+	{
+		BlockInput MouseMoveOff
+		Gui, Destroy		
+		MsgBox Must be on MyCadent order page to use this function
+		Exit
+	}
+
+	orderID := MyCadentDriver.findElementByID(cadentCssID["orderID"]).Attribute("value")
+
+	return orderID
+}
+
 Cadent_exportClick(currentURL) 
 {
 	BlockInput MouseMove
@@ -115,6 +140,10 @@ Cadent_exportClick(currentURL)
 	BlockInput, MouseMoveOff
 	return
 }
+
+; ===========================================================================================================================
+; OrthoCad functions
+; ===========================================================================================================================
 
 Cadent_exportOrthoCAD(patientInfo) 
 {
@@ -256,21 +285,4 @@ Cadent_moveSTLs(exportFilename)
 	}
 
 	return
-}
-
-Cadent_GetOrderID()
-{
-	Cadent_StillOpen()
-
-	if !InStr(MyCadentDriver.Url, "https://mycadent.com/CaseInfo.aspx")
-	{
-		BlockInput MouseMoveOff
-		Gui, Destroy		
-		MsgBox Must be on MyCadent order page to use this function
-		Exit
-	}
-
-	orderID := MyCadentDriver.findElementByID(cadentCssID["orderID"]).Attribute("value")
-
-	return orderID
 }

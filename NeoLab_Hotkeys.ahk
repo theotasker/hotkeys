@@ -98,7 +98,7 @@ f5:: ; Swap between review and edit pages
 	return
 }
 
-f6:: ; hit start/stop button for case, must be on review or edit page
+f6:: ; enters Cadent ID into RXWizard note
 {
 	Gui_progressBar(action:="create", percent:=0)
 
@@ -271,12 +271,6 @@ SettitleMatchMode, 1
 	return
 }
 
-!+.:: ; Export finished case
-{
-	Ortho_Export()
-	return
-}
-
 !+g:: ; hits "next" button in 3shape prepping
 {
 	ControlGetText, PrepStep, TdfInfoCaption2, ahk_group ThreeShape
@@ -287,8 +281,7 @@ SettitleMatchMode, 1
 	return
 }
 
-; Wax Knife preset double tap tools
-!+1::
+!+1:: ; Wax Knife preset double tap tools
 {
 	waxOneTick := Ortho_Wax(firstKnife:=1, secondKnife:=5, lastTick:=waxOneTick)
 	return
@@ -312,66 +305,43 @@ SettitleMatchMode, 1
 	return
 }
 
-; Artifact Removal
-!+a::
+!+a:: ; Artifact Removal
 {
-	ControlGetText, PrepStep, TdfInfoCaption2, ahk_group ThreeShape
-	if PrepStep not in Sculpt Maxillary,Sculpt Mandibular 
-	{
-		return
-	}
-
-	WinActivate ahk_group ThreeShape
-	quickClick(3shapeButtons["artifactX"], 3shapeButtons["artifactY"])
+	Ortho_toolSelect(selectedTool:="artifact")
 	return
 }
 
-; Plane Cut
-!+p::
+!+p:: ; Plane Cut
 {
-	ControlGetText, PrepStep, TdfInfoCaption2, ahk_group ThreeShape
-	if PrepStep not in Sculpt Maxillary,Sculpt Mandibular 
-	{
-		return
-	}
-
-	WinActivate ahk_group ThreeShape
-	quickClick(3shapeButtons["planeCutX"], 3shapeButtons["planeCutY"])
+	Ortho_toolSelect(selectedTool:="planeCut")
 	return
 }
 
-; Spline Cut
-!+s::
+!+s:: ; Spline Cut
 {
-	ControlGetText, PrepStep, TdfInfoCaption2, ahk_group ThreeShape
-	if PrepStep not in Sculpt Maxillary,Sculpt Mandibular 
-	{
-		return
-	}
-
-	WinActivate ahk_group ThreeShape
-	quickClick(3shapeButtons["splineCutX"], 3shapeButtons["splineCutY"])
-	BlockInput MouseMove
-	Sleep, 100
-	WinActivate ahk_group ThreeShape
-	quickClick(3shapeButtons["splineSmoothX"], 3shapeButtons["splineSmoothY"])
+	Ortho_toolSelect(selectedTool:="splineCut")
 	return
 }
 
-
-quickClick(xCoord, yCoord)
-{
-	BlockInput MouseMove
-    MouseGetPos, x, y
-    Click, %xCoord%, %yCoord%
-    MouseMove, %x%, %y%, 0
-    BlockInput MouseMoveOff
-	return
-}
 
 ; =========================================================================================================================
 ; Extra Functions
 ; =========================================================================================================================
+
+quickClick(xCoord, yCoord, secondXCoord:=false, secondYCoord:=false, pauseTime:=0)
+{
+	BlockInput MouseMove
+    MouseGetPos, x, y
+    Click, %xCoord%, %yCoord%
+	if (secondXCoord != false)
+	{
+		Sleep, %pauseTime%
+		Click, %secondXCoord%, %secondYCoord%
+	}
+    MouseMove, %x%, %y%, 0
+    BlockInput MouseMoveOff
+	return
+}
 
 parseArches() {
     if !FileExist(tempModelsDir "*.stl")

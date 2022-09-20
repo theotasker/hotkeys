@@ -3,7 +3,7 @@
 ; ===========================================================================================================================
 
 ; ===========================================================================================================================
-; Constants and groups
+; Variables and groups
 ; ===========================================================================================================================
 
 ; starting ticks for double-tap functions for 3D mouse
@@ -16,8 +16,8 @@ waxTwoTick := A_TickCount
 waxThreeTick := A_TickCount
 
 ; Groups to determine active windows
-GroupAdd, ThreeShape, OrthoAnalyzer - [
-GroupAdd, ThreeShape, ApplianceDesigner - [
+GroupAdd, ThreeShape, OrthoAnalyzer
+GroupAdd, ThreeShape, ApplianceDesigner
 
 GroupAdd, ThreeShapePatient, New patient model set info
 GroupAdd, ThreeShapePatient, New patient info
@@ -26,7 +26,7 @@ GroupAdd, ThreeShapeExe, ahk_exe OrthoAnalyzer.exe
 GroupAdd, ThreeShapeExe, ahk_exe ApplianceDesigner.exe
 
 ; ===========================================================================================================================
-; Functions
+; Data entry functions
 ; ===========================================================================================================================
 
 Ortho_AdvSearch(patientInfo, searchMethod) ; function to enter patient name into advanced search field and search using globals
@@ -163,6 +163,84 @@ ortho_createModelSet(patientInfo)
     return
 }
 
+Ortho_Export() ; While in model edit, clicks the green check mark and exports model
+{
+	BlockInput MouseMove
+	if !WinExist("ahk_group ThreeShape")
+	{
+		BlockInput MouseMoveOff
+		Gui, Destroy
+		MsgBox,, Wrong Window, Must be in a case to use this function
+		return
+	}
+
+	BlockInput MouseMove
+	WinActivate ahk_group ThreeShape
+	Click, 1088, 95 ; Check Mark
+	BlockInput MouseMoveOff
+
+	WinWaitActive, Open patient case,, 30
+	if ErrorLevel
+	{
+		BlockInput MouseMoveOff
+        Gui, Destroy
+		MsgBox,, Timeout Error, "Open Patient Case" window took too long to open
+		Exit
+	}
+	
+	BlockInput MouseMove ; Export Clicks
+	Sleep, 200
+	Click, 389, 46
+	Sleep, 100
+	Send {Down 6}
+	Sleep, 100
+	Send {Enter}
+
+	WinWaitActive, Exported items,, 15 ; Wait for export confirmation box
+	if ErrorLevel
+	{
+		BlockInput MouseMoveOff
+        Gui, Destroy
+		MsgBox,, Timeout Error, Export Confirmation took too long
+		Exit
+	}
+
+	BlockInput MouseMoveOff
+	return
+}
+
+ortho_sendText(textToSend, targetBox, targetWindow)
+{
+	ControlGetText, returnText, %targetBox%, %targetWindow%
+
+	While(returnText != textToSend && loopCheck < 5)
+	{
+		ControlFocus, %targetBox%, %targetWindow%
+		Sleep, 100
+		Send, ^a
+		Sleep, 100
+		Send, {del}
+		Sleep, 100
+		Send, %textToSend%
+		Sleep, 100
+		Send, {del}
+		Sleep, 100
+		ControlGetText, returnText, %targetBox%, %targetWindow%
+		loopCheck++
+	}
+	If(returnText != textToSend)
+	{
+		return False
+	}
+	else
+	{
+		return True
+	}
+}
+
+; ===========================================================================================================================
+; Prepping functions
+; ===========================================================================================================================
 
 Ortho_View(firstViewY, secondViewY, lastActionTick) ; clicks the view button declared before the function is called, swaps to a secondary view if pressed twice
 {
@@ -266,51 +344,7 @@ Ortho_Wax(firstKnife, secondKnife, lastTick) ; Tool for swapping out wax knifes
 	return currentTick
 }
 
-Ortho_Export() ; While in model edit, clicks the green check mark and exports model
-{
-	BlockInput MouseMove
-	if !WinExist("ahk_group ThreeShape")
-	{
-		BlockInput MouseMoveOff
-		Gui, Destroy
-		MsgBox,, Wrong Window, Must be in a case to use this function
-		return
-	}
 
-	BlockInput MouseMove
-	WinActivate ahk_group ThreeShape
-	Click, 1088, 95 ; Check Mark
-	BlockInput MouseMoveOff
-
-	WinWaitActive, Open patient case,, 30
-	if ErrorLevel
-	{
-		BlockInput MouseMoveOff
-        Gui, Destroy
-		MsgBox,, Timeout Error, "Open Patient Case" window took too long to open
-		Exit
-	}
-	
-	BlockInput MouseMove ; Export Clicks
-	Sleep, 200
-	Click, 389, 46
-	Sleep, 100
-	Send {Down 6}
-	Sleep, 100
-	Send {Enter}
-
-	WinWaitActive, Exported items,, 15 ; Wait for export confirmation box
-	if ErrorLevel
-	{
-		BlockInput MouseMoveOff
-        Gui, Destroy
-		MsgBox,, Timeout Error, Export Confirmation took too long
-		Exit
-	}
-
-	BlockInput MouseMoveOff
-	return
-}
 
 Ortho_takeBitePics(patientInfo) 
 {
@@ -349,31 +383,50 @@ Ortho_takeBitePics(patientInfo)
 	return screenshotDir
 }
 
-ortho_sendText(textToSend, targetBox, targetWindow)
-{
-	ControlGetText, returnText, %targetBox%, %targetWindow%
 
-	While(returnText != textToSend && loopCheck < 5)
+Ortho_toolSelect(selectedTool) ; select or apply specified tool
+{
+	ControlGetText, PrepStep, TdfInfoCaption2, ahk_group ThreeShape
+	if PrepStep not in Sculpt Maxillary,Sculpt Mandibular 
 	{
-		ControlFocus, %targetBox%, %targetWindow%
-		Sleep, 100
-		Send, ^a
-		Sleep, 100
-		Send, {del}
-		Sleep, 100
-		Send, %textToSend%
-		Sleep, 100
-		Send, {del}
-		Sleep, 100
-		ControlGetText, returnText, %targetBox%, %targetWindow%
-		loopCheck++
+		return
 	}
-	If(returnText != textToSend)
+	ControlGetText, activeTool, TdfGroupInfo1, Feature
+
+	WinActivate Feature, Sculpt toolkit
+
+	if (selectedTool = "splineCut")
 	{
-		return False
+		if (activeTool != "Spline cut settings")
+		{
+			quickClick(3shapeButtons["splineCutX"], 3shapeButtons["splineCutY"], 3shapeButtons["splineSmoothX"], 3shapeButtons["splineSmoothY"], 100)
+		}
+		Else
+		{
+			quickClick(3shapeButtons["splineCutApplyX"], 3shapeButtons["splineCutApplyY"])
+		}
 	}
-	else
+	else if (selectedTool = "planeCut")
 	{
-		return True
+		if (activeTool != "Plane cut settings")
+		{
+			quickClick(3shapeButtons["planeCutX"], 3shapeButtons["planeCutY"])
+		}
+		Else
+		{
+			quickClick(3shapeButtons["planeCutApplyX"], 3shapeButtons["planeCutApplyY"])
+		}
 	}
+	else if (selectedTool = "artifact")
+	{
+		if (activeTool != "Remove Artifacts settings")
+		{
+			quickClick(3shapeButtons["artifactX"], 3shapeButtons["artifactY"])
+		}
+		Else
+		{
+			quickClick(3shapeButtons["artifactApplyX"], 3shapeButtons["artifactApplyY"])
+		}
+	}
+	return 
 }

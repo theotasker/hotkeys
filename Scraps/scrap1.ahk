@@ -2,12 +2,12 @@
 CoordMode, Mouse, Client
 CoordMode, Pixel, Client
 
+SetTitleMatchMode, 2
 
 f3::
 {
-    controlGetFocus, returnVar, Open patient case
-
-    msgbox % returnVar
+    ControlGetText, activeTool, TdfGroupInfo1, Feature
+    msgbox % activeTool
 
     return
 }
