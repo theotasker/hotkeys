@@ -256,17 +256,12 @@ SettitleMatchMode, 1
 
 !+c::  ; Transparency
 {
-	Ortho_View(3shapeButtons["transparencyY"], 3shapeButtons["transparencyY"], topTick)
+	Ortho_transparency()
 	return
 }
 
 !+v:: ; Switch Visible Model
 {
-	UpperDotX := 1708
-	UpperDotY := 79
-	LowerDotX := 1708
-	LowerDotY := 106
-
 	Ortho_VisibleModel()
 	return
 }
@@ -276,7 +271,9 @@ SettitleMatchMode, 1
 	readyToExport := Ortho_nextButton()
 	if (readyToExport = true)
 	{
+		Gui_progressBar(action:="create", percent:=50)
 		Ortho_Export()
+		Gui_progressBar(action:="destroy", percent:=0)
 	}
 	return
 }

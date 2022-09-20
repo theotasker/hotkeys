@@ -262,45 +262,48 @@ Ortho_View(firstViewY, secondViewY, lastActionTick) ; clicks the view button dec
 	return currentTick
 }
 
-Ortho_VisibleModel() ; Swaps Visisble Model
+Ortho_VisibleModel() ; Swaps visible Model
 {
 	BlockInput MouseMove
-    global UpperDotX, UpperDotY, LowerDotX, LowerDotY
 
-    ; Activates the main window and gets the pixel colors of the model dots
 	WinActivate ahk_group ThreeShape
-	PixelGetColor, uppervar, %UpperDotX%, %UpperDotY%
-	PixelGetColor, lowervar, %LowerDotX%, %LowerDotY%
+	PixelGetColor, upperModelPixel, 3shapeModelSlider["upperX"], 3shapeModelSlider["upperY"]
+	PixelGetColor, lowerModelPixel, 3shapeModelSlider["lowerX"], 3shapeModelSlider["lowerY"]
 
-    ; if both black, turn off the lower
-	if (uppervar = 0x000000) and (lowervar = 0x000000)
+	if ((upperModelPixel = 0x000000) and (lowerModelPixel = 0x000000)) ; both models on, turn off lower
 	{
-		BlockInput MouseMove
-		MouseGetPos, x, y
-		Click, %LowerDotX%, %LowerDotY%
-		MouseMove, %x%, %y%, 0
-		BlockInput MouseMoveOff
+		quickClick(3shapeModelSlider["lowerX"], 3shapeModelSlider["lowerY"])
 	}
-    ; if lower off, switch models
-	if (uppervar = 0x000000) and (lowervar = 0xF0F0F0)
+	else if ((upperModelPixel = 0x000000) and (lowerModelPixel = 0xF0F0F0)) ; only upper on, swap models
 	{
-		BlockInput MouseMove
-		MouseGetPos, x, y
-		Click, %UpperDotX%, %UpperDotY%
-		Click, %LowerDotX%, %LowerDotY%
-		MouseMove, %x%, %y%, 0
-		BlockInput MouseMoveOff
+		quickClick(3shapeModelSlider["upperX"], 3shapeModelSlider["upperY"], 3shapeModelSlider["lowerX"], 3shapeModelSlider["lowerY"])
 	}
-    ; if upper off, turn on upper
-	if (uppervar = 0xF0F0F0) and (lowervar = 0x000000)
+	else if ((upperModelPixel = 0xF0F0F0) and (lowerModelPixel = 0x000000)) ; only lower on, turn on upper
 	{
-		BlockInput MouseMove
-		MouseGetPos, x, y
-		Click, %UpperDotX%, %UpperDotY%
-		MouseMove, %x%, %y%, 0
-		BlockInput MouseMoveOff
+		quickClick(3shapeModelSlider["upperX"], 3shapeModelSlider["upperY"])
 	}
 	BlockInput MouseMoveOff
+	return
+}
+
+Ortho_transparency()
+{
+	PixelGetColor, upperModelPixel, 3shapeModelSlider["upperX"], 3shapeModelSlider["upperY"]
+	PixelGetColor, lowerModelPixel, 3shapeModelSlider["lowerX"], 3shapeModelSlider["lowerY"]
+	PixelGetColor, upperTransPixel, 3shapeModelSlider["upperTransX"], 3shapeModelSlider["upperY"]
+	PixelGetColor, lowerTransPixel, 3shapeModelSlider["lowerTransX"], 3shapeModelSlider["lowerY"]
+
+	if (upperModelPixel = 0x000000) or (upperModelPixel = 0xF0F0F0) ; if upper model exists
+	{
+		if (upperTransPixel = 0xC9C3BB)
+		{
+			quickClick(3shapeModelSlider["upperTransX"], 3shapeModelSlider["upperY"])
+		}
+		Else
+		{
+			quickClick(3shapeModelSlider["upperHalfX"], 3shapeModelSlider["upperY"])
+		}
+	}
 	return
 }
 
