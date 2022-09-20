@@ -96,7 +96,7 @@ SetBox()
 	return
 }
 
-Gui_progressBar(action, percent)
+Gui_progressBar(action, percent:=0)
 {
 	global
 	if (action = "create")

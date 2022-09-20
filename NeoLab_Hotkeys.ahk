@@ -42,7 +42,7 @@ f1:: ; Advanced search active RXWizard patient in 3Shape using script number
 	Gui_progressBar(action:="update", percent:=50)
 
 	Ortho_AdvSearch(patientInfo, searchMethod:="scriptNumber")
-	Gui_progressBar(action:="destroy", percent:=0)
+	Gui_progressBar(action:="destroy")
 
 	return
 }
@@ -61,7 +61,7 @@ f2:: ; takes snapshot from 3shape and uploads to RXWizard
 	Gui_progressBar(action:="update", percent:=75)
 
 	Neo_uploadPic(screenshotDir)
-	Gui_progressBar(action:="destroy", percent:=0)
+	Gui_progressBar(action:="destroy")
 
 	return
 }
@@ -71,7 +71,7 @@ f3:: ; just for testing, for now
 	Gui_progressBar(action:="create", percent:=0)
 	Ortho_Export()
 
-	Gui_progressBar(action:="destroy", percent:=0)
+	Gui_progressBar(action:="destroy")
 	return
 }
 
@@ -85,7 +85,7 @@ f4:: ; place cursor in the search field in RXWizard for barcode scanning
 	Gui_progressBar(action:="create", percent:=0)
 
     Neo_activate(scanField:=True)
-	Gui_progressBar(action:="destroy", percent:=0)
+	Gui_progressBar(action:="destroy")
     return
 }
 
@@ -94,7 +94,7 @@ f5:: ; Swap between review and edit pages
 	Gui_progressBar(action:="create", percent:=0)
 
 	Neo_swapPages(destPage:="swap")
-	Gui_progressBar(action:="destroy", percent:=0)
+	Gui_progressBar(action:="destroy")
 	return
 }
 
@@ -109,7 +109,7 @@ f6:: ; enters Cadent ID into RXWizard note
 	Gui_progressBar(action:="update", percent:=60)
 
 	Neo_NewNote(orderID)
-	Gui_progressBar(action:="destroy", percent:=0)
+	Gui_progressBar(action:="destroy")
 	return
 }
 
@@ -125,7 +125,7 @@ f7:: ; retrieve patient info from RXWizard and perform advanced search inside Or
 	Gui_progressBar(action:="update", percent:=50)
 
 	Ortho_AdvSearch(patientInfo, searchMethod:="patientName")
-	Gui_progressBar(action:="destroy", percent:=0)
+	Gui_progressBar(action:="destroy")
     return
 }
 
@@ -137,7 +137,7 @@ f8:: ; Create new patient if non exists, then create model set
 	Gui_progressBar(action:="update", percent:=50)
 
 	ortho_createModelSet(patientInfo)
-	Gui_progressBar(action:="destroy", percent:=0)
+	Gui_progressBar(action:="destroy")
 	return
 }
 
@@ -163,7 +163,7 @@ f9:: ; for importing, returns to patient info and deletes temp STLs
 			FileDelete, %A_MyDocuments%\Temp Models\*.stl
 	}
 
-	Gui_progressBar(action:="destroy", percent:=0)
+	Gui_progressBar(action:="destroy")
     return
 }
 
@@ -177,7 +177,7 @@ f10:: ; get patient info from RXWizard and search in myCadent
 
 	if !Cadent_StillOpen()
 	{
-		Gui_progressBar(action:="destroy", percent:=0)
+		Gui_progressBar(action:="destroy")
 		return
 	}
 	
@@ -185,7 +185,7 @@ f10:: ; get patient info from RXWizard and search in myCadent
 	Gui_progressBar(action:="update", percent:=50)
 
     Cadent_ordersPage(patientInfo, patientSearch:=True)
-	Gui_progressBar(action:="destroy", percent:=0)
+	Gui_progressBar(action:="destroy")
 	return
 }
 
@@ -206,7 +206,7 @@ f11:: ; While on patient page in myCadent, export STL
 	Gui_progressBar(action:="update", percent:=70)
 
 	Cadent_moveSTLs(exportFilename) ; moves exported STLs to the temp models folder
-	Gui_progressBar(action:="destroy", percent:=0)
+	Gui_progressBar(action:="destroy")
     return
 }
 
@@ -218,7 +218,7 @@ f12:: ; renames arches in temp models folder, asks user for arch selection and a
 	Gui_progressBar(action:="update", percent:=10)
 
 	existingArchFilenames := parseArches()
-	Gui_progressBar(action:="destroy", percent:=20)
+	Gui_progressBar(action:="destroy")
 
 	filenameBase := patientInfo["engravingBarcode"] "~" patientInfo["firstName"] "~" patientInfo["lastName"] "~" patientInfo["clinicName"] "~" patientInfo["scriptNumber"] "~"
 	filenameBase := StrReplace(filenameBase, " ", "_")
@@ -273,7 +273,7 @@ SettitleMatchMode, 1
 	{
 		Gui_progressBar(action:="create", percent:=50)
 		Ortho_Export()
-		Gui_progressBar(action:="destroy", percent:=0)
+		Gui_progressBar(action:="destroy")
 	}
 	return
 }
