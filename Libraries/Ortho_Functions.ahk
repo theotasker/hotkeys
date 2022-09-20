@@ -67,14 +67,18 @@ Ortho_AdvSearch(patientInfo, searchMethod) ; function to enter patient name into
 	if (searchMethod = "patientName")
 	{
 		ortho_sendText(patientInfo["firstName"], 3shapeFields["advSearchFirst"], "Open patient case")
-
 		ortho_sendText(patientInfo["lastName"], 3shapeFields["advSearchLast"], "Open patient case")
-
 		ortho_sendText(patientInfo["clinicName"], 3shapeFields["advSearchClinic"], "Open patient case")
+
+		ortho_sendText("", 3shapeFields["advSearchScript2019"], "Open patient case")
 	}
 	else 
 	{
 		ortho_sendText(patientInfo["scriptNumber"], 3shapeFields["advSearchScript2019"], "Open patient case")
+
+		ortho_sendText("", 3shapeFields["advSearchFirst"], "Open patient case")
+		ortho_sendText("", 3shapeFields["advSearchLast"], "Open patient case")
+		ortho_sendText("", 3shapeFields["advSearchClinic"], "Open patient case")
 	}
 
 	ControlFocus, 3shapeFields["advSearchGo"], Open patient case
@@ -323,6 +327,8 @@ Ortho_takeBitePics(patientInfo)
 
 ortho_sendText(textToSend, targetBox, targetWindow)
 {
+	ControlGetText, returnText, %targetBox%, %targetWindow%
+
 	While(returnText != textToSend && loopCheck < 5)
 	{
 		ControlFocus, %targetBox%, %targetWindow%
