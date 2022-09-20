@@ -415,7 +415,7 @@ parseArches() {
 }
 
 finalizeSTLs(finishOptions, existingArchFilenames, filenameBase) {
-    if (finishOptions["arches"] = "both")
+    if (finishOptions["arches"] = True)
     {
         filenameTag := "[2].stl"
     }
