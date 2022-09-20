@@ -1,35 +1,10 @@
 ; ===========================================================================================================================
-; Library for all Standalone functions pertaining to Ortho Analyzer and Appliance designer
+; Library for Ortho_ functions
 ; ===========================================================================================================================
 
 ; ===========================================================================================================================
-; Constants and groups
+; Variables and groups
 ; ===========================================================================================================================
-
-; constants for 3Shape button positions
-global allViewX := 1902
-global topViewY := 286
-global bottomViewY := 253
-global rightViewY := 215
-global leftViewY := 177
-global frontViewY := 106
-global backViewY := 140
-global transparencyY := 800
-global transparencyY := 800
-
-global artifactX := 120
-global artifacty := 173
-global planeCutX := 165
-global planeCutY := 175
-global splineCutX := 205
-global splineCutY := 175
-global splineSmoothX := 195
-global splineSmoothY := 300
-global waxKnifeX := 35
-global waxKnifeY := 175
-
-global nextButtonX := 190
-global nextButtonY := 30
 
 ; starting ticks for double-tap functions for 3D mouse
 topTick := A_TickCount
@@ -41,8 +16,8 @@ waxTwoTick := A_TickCount
 waxThreeTick := A_TickCount
 
 ; Groups to determine active windows
-GroupAdd, ThreeShape, OrthoAnalyzer - [
-GroupAdd, ThreeShape, ApplianceDesigner - [
+GroupAdd, ThreeShape, OrthoAnalyzer
+GroupAdd, ThreeShape, ApplianceDesigner
 
 GroupAdd, ThreeShapePatient, New patient model set info
 GroupAdd, ThreeShapePatient, New patient info
@@ -50,7 +25,9 @@ GroupAdd, ThreeShapePatient, New patient info
 GroupAdd, ThreeShapeExe, ahk_exe OrthoAnalyzer.exe
 GroupAdd, ThreeShapeExe, ahk_exe ApplianceDesigner.exe
 
-
+; ===========================================================================================================================
+; Data entry functions
+; ===========================================================================================================================
 
 Ortho_AdvSearch(patientInfo, searchMethod) ; function to enter patient name into advanced search field and search using globals
 {
@@ -72,14 +49,14 @@ Ortho_AdvSearch(patientInfo, searchMethod) ; function to enter patient name into
         Exit
     }
 
-    WinActivate, ahk_exe OrthoAnalyzer.exe
+    WinActivate, ahk_group ThreeShapeExe
     WinWaitActive, Open patient case,, 10
 
     if ErrorLevel
     {
 		BlockInput MouseMoveOff
 		Gui, Destroy
-        MsgBox, Couldn't get focus on Ortho Analyzer
+        MsgBox, Couldn't get focus on 3Shape
         return
     }
     Sleep, 200
@@ -89,20 +66,46 @@ Ortho_AdvSearch(patientInfo, searchMethod) ; function to enter patient name into
     Send, {Enter}
     Sleep, 400
 
+	; ===========================================================================================================================
+	; Added to check the search field locator between 2019 and 2021
+
+	if (3shapeFields["advSearchScript"] = "")
+	{
+		quickClick(3shapeFields["advSearchScriptX"], 3shapeFields["advSearchScriptY"])
+		Sleep, 200
+		controlGetFocus, scriptHandle, Open patient case
+		if (scriptHandle = 3shapeFields["advSearchScript2019"])
+		{
+			global 3ShapeVersion := "2019"
+			3shapeFields["advSearchScript"] := 3shapeFields["advSearchScript2019"]
+		}
+		else if (scriptHandle = 3shapeFields["advSearchScript2021"])
+		{
+			global 3ShapeVersion := "2021"
+			3shapeFields["advSearchScript"] := 3shapeFields["advSearchScript2021"]
+		}
+	}
+
+	; ===========================================================================================================================
+
 	if (searchMethod = "patientName")
 	{
-		ortho_sendText(patientInfo["firstName"], "TEdit10", "Open patient case")
+		ortho_sendText(patientInfo["firstName"], 3shapeFields["advSearchFirst"], "Open patient case")
+		ortho_sendText(patientInfo["lastName"], 3shapeFields["advSearchLast"], "Open patient case")
+		ortho_sendText(patientInfo["clinicName"], 3shapeFields["advSearchClinic"], "Open patient case")
 
-		ortho_sendText(patientInfo["lastName"], "TEdit9", "Open patient case")
-
-		ortho_sendText(patientInfo["clinicName"], "Edit1", "Open patient case")
+		ortho_sendText("", 3shapeFields["advSearchScript"], "Open patient case")
 	}
 	else 
 	{
-		ortho_sendText(patientInfo["scriptNumber"], "TEdit16", "Open patient case")
+		ortho_sendText(patientInfo["scriptNumber"], 3shapeFields["advSearchScript"], "Open patient case")
+
+		ortho_sendText("", 3shapeFields["advSearchFirst"], "Open patient case")
+		ortho_sendText("", 3shapeFields["advSearchLast"], "Open patient case")
+		ortho_sendText("", 3shapeFields["advSearchClinic"], "Open patient case")
 	}
 
-	ControlFocus, TButton2, Open patient case
+	ControlFocus, 3shapeFields["advSearchGo"], Open patient case
 	Send {enter}
 	Sleep, 100
 	Send {down}
@@ -124,7 +127,7 @@ ortho_createModelSet(patientInfo)
     }
 
     WinActivate Open patient case
-	quickClick("78", "46")
+	quickClick(3shapeButtons["newPatientModelX"], 3shapeButtons["newPatientModelY"])
 
     ; see which window opens
     WinWaitActive, ahk_group ThreeShapePatient,, 5
@@ -139,18 +142,14 @@ ortho_createModelSet(patientInfo)
     SetTitleMatchMode, 3
     if WinActive("New patient info",, model)
     {
-        BlockInput, MouseMove
-		ortho_sendText(patientInfo["firstName"] patientInfo["lastName"], "TEdit4", "New patient info")
-		ortho_sendText(patientInfo["firstName"], "TEdit10", "New patient info")
-		ortho_sendText(patientInfo["lastName"], "TEdit9", "New patient info")
-		ortho_sendText(patientInfo["clinicName"], "Edit1", "New patient info")
-        BlockInput, MouseMoveOff
+		ortho_sendText(patientInfo["firstName"] patientInfo["lastName"], 3shapeFields["newPatientExt"], "New patient info")
+		ortho_sendText(patientInfo["firstName"], 3shapeFields["newPatientFirst"], "New patient info")
+		ortho_sendText(patientInfo["lastName"], 3shapeFields["newPatientLast"], "New patient info")
+		ortho_sendText(patientInfo["clinicName"], 3shapeFields["newPatientClinic"], "New patient info")
     }
     else if WinActive("New patient model set info")
     {
-        ControlFocus, TEdit5
-        Sleep, 100
-        Send, % patientInfo["scriptNumber"]
+		ortho_sendText(patientInfo["scriptNumber"], 3shapeFields["newModelScript"], "New patient model set info")
     }
     else
     {
@@ -164,6 +163,73 @@ ortho_createModelSet(patientInfo)
     return
 }
 
+Ortho_Export() ; At end of model edit, waits for patient browser then exports STL
+{
+	BlockInput MouseMove
+
+	WinActivate Open patient case
+	WinWaitActive, Open patient case,, 30
+	if ErrorLevel
+	{
+		BlockInput MouseMoveOff
+        Gui, Destroy
+		MsgBox,, Timeout Error, "Open Patient Case" window took too long to open
+		Exit
+	}
+
+	Sleep, 200
+	quickClick(3shapeButtons["modelExportX"], 3shapeButtons["modelExportY"])
+	Sleep, 100
+	Send {Up 2}
+	Sleep, 100
+	Send {Enter}
+
+	WinWaitActive, Exported items,, 15 ; Wait for export confirmation box
+	if ErrorLevel
+	{
+		BlockInput MouseMoveOff
+        Gui, Destroy
+		MsgBox,, Timeout Error, Export Confirmation took too long
+		Exit
+	}
+
+	Send, {Enter}
+	BlockInput MouseMoveOff
+	return
+}
+
+ortho_sendText(textToSend, targetBox, targetWindow)
+{
+	ControlGetText, returnText, %targetBox%, %targetWindow%
+
+	While(returnText != textToSend && loopCheck < 5)
+	{
+		ControlFocus, %targetBox%, %targetWindow%
+		Sleep, 100
+		Send, ^a
+		Sleep, 100
+		Send, {del}
+		Sleep, 100
+		Send, %textToSend%
+		Sleep, 100
+		Send, {del}
+		Sleep, 100
+		ControlGetText, returnText, %targetBox%, %targetWindow%
+		loopCheck++
+	}
+	If(returnText != textToSend)
+	{
+		return False
+	}
+	else
+	{
+		return True
+	}
+}
+
+; ===========================================================================================================================
+; Prepping view functions
+; ===========================================================================================================================
 
 Ortho_View(firstViewY, secondViewY, lastActionTick) ; clicks the view button declared before the function is called, swaps to a secondary view if pressed twice
 {
@@ -174,7 +240,7 @@ Ortho_View(firstViewY, secondViewY, lastActionTick) ; clicks the view button dec
 	if currentTick - lastActionTick > 1000
 	{
 		WinActivate ahk_group ThreeShape
-		quickClick(allViewX, firstViewY)
+		quickClick(3shapeButtons["allViewX"], firstViewY)
 		toggle := 1
 	}
 	else
@@ -182,14 +248,14 @@ Ortho_View(firstViewY, secondViewY, lastActionTick) ; clicks the view button dec
 		if toggle = 1
 		{
 			WinActivate ahk_group ThreeShape
-			quickClick(allViewX, secondViewY)
+			quickClick(3shapeButtons["allViewX"], secondViewY)
 
 			toggle := 2
 		}
 		else if toggle = 2
 		{
 			WinActivate ahk_group ThreeShape
-			quickClick(allViewX, firstViewY)
+			quickClick(3shapeButtons["allViewX"], firstViewY)
 			toggle := 1
 		}
 	}
@@ -197,47 +263,54 @@ Ortho_View(firstViewY, secondViewY, lastActionTick) ; clicks the view button dec
 	return currentTick
 }
 
-Ortho_VisibleModel() ; Swaps Visisble Model
+Ortho_VisibleModel() ; Swaps visible Model
 {
 	BlockInput MouseMove
-    global UpperDotX, UpperDotY, LowerDotX, LowerDotY
 
-    ; Activates the main window and gets the pixel colors of the model dots
 	WinActivate ahk_group ThreeShape
-	PixelGetColor, uppervar, %UpperDotX%, %UpperDotY%
-	PixelGetColor, lowervar, %LowerDotX%, %LowerDotY%
+	PixelGetColor, upperModelPixel, 3shapeModelSlider["upperX"], 3shapeModelSlider["upperY"]
+	PixelGetColor, lowerModelPixel, 3shapeModelSlider["lowerX"], 3shapeModelSlider["lowerY"]
 
-    ; if both black, turn off the lower
-	if (uppervar = 0x000000) and (lowervar = 0x000000)
+	if ((upperModelPixel = 0x000000) and (lowerModelPixel = 0x000000)) ; both models on, turn off lower
 	{
-		BlockInput MouseMove
-		MouseGetPos, x, y
-		Click, %LowerDotX%, %LowerDotY%
-		MouseMove, %x%, %y%, 0
-		BlockInput MouseMoveOff
+		quickClick(3shapeModelSlider["lowerX"], 3shapeModelSlider["lowerY"])
 	}
-    ; if lower off, switch models
-	if (uppervar = 0x000000) and (lowervar = 0xF0F0F0)
+	else if ((upperModelPixel = 0x000000) and (lowerModelPixel = 0xF0F0F0)) ; only upper on, swap models
 	{
-		BlockInput MouseMove
-		MouseGetPos, x, y
-		Click, %UpperDotX%, %UpperDotY%
-		Click, %LowerDotX%, %LowerDotY%
-		MouseMove, %x%, %y%, 0
-		BlockInput MouseMoveOff
+		quickClick(3shapeModelSlider["upperX"], 3shapeModelSlider["upperY"], 3shapeModelSlider["lowerX"], 3shapeModelSlider["lowerY"])
 	}
-    ; if upper off, turn on upper
-	if (uppervar = 0xF0F0F0) and (lowervar = 0x000000)
+	else if ((upperModelPixel = 0xF0F0F0) and (lowerModelPixel = 0x000000)) ; only lower on, turn on upper
 	{
-		BlockInput MouseMove
-		MouseGetPos, x, y
-		Click, %UpperDotX%, %UpperDotY%
-		MouseMove, %x%, %y%, 0
-		BlockInput MouseMoveOff
+		quickClick(3shapeModelSlider["upperX"], 3shapeModelSlider["upperY"])
 	}
 	BlockInput MouseMoveOff
 	return
 }
+
+Ortho_transparency()
+{
+	PixelGetColor, upperModelPixel, 3shapeModelSlider["upperX"], 3shapeModelSlider["upperY"]
+	PixelGetColor, lowerModelPixel, 3shapeModelSlider["lowerX"], 3shapeModelSlider["lowerY"]
+	PixelGetColor, upperTransPixel, 3shapeModelSlider["upperTransX"], 3shapeModelSlider["upperY"]
+	PixelGetColor, lowerTransPixel, 3shapeModelSlider["lowerTransX"], 3shapeModelSlider["lowerY"]
+
+	if (upperModelPixel = 0x000000) or (upperModelPixel = 0xF0F0F0) ; if upper model exists
+	{
+		if (upperTransPixel = 0xC9C3BB)
+		{
+			quickClick(3shapeModelSlider["upperTransX"], 3shapeModelSlider["upperY"])
+		}
+		Else
+		{
+			quickClick(3shapeModelSlider["upperHalfX"], 3shapeModelSlider["upperY"])
+		}
+	}
+	return
+}
+
+; ===========================================================================================================================
+; Prepping tool functions
+; ===========================================================================================================================
 
 Ortho_Wax(firstKnife, secondKnife, lastTick) ; Tool for swapping out wax knifes
 {
@@ -253,7 +326,7 @@ Ortho_Wax(firstKnife, secondKnife, lastTick) ; Tool for swapping out wax knifes
 
 	if PrepTool != "Wax knife settings"
 		WinActivate ahk_group ThreeShape
-		quickClick(waxKnifeX, waxKnifeY)
+		quickClick(3shapeButtons["waxKnifeX"], 3shapeButtons["waxKnifeY"])
 	currentTick := A_TickCount
 	if currentTick - lastTick > 900
 	{
@@ -267,79 +340,35 @@ Ortho_Wax(firstKnife, secondKnife, lastTick) ; Tool for swapping out wax knifes
 	return currentTick
 }
 
-Ortho_Export() ; While in model edit, clicks the green check mark and exports model
-{
-	BlockInput MouseMove
-	if !WinExist("ahk_group ThreeShape")
-	{
-		BlockInput MouseMoveOff
-		Gui, Destroy
-		MsgBox,, Wrong Window, Must be in a case to use this function
-		return
-	}
-
-	BlockInput MouseMove
-	WinActivate ahk_group ThreeShape
-	Click, 1088, 95 ; Check Mark
-	BlockInput MouseMoveOff
-
-	WinWaitActive, Open patient case,, 30
-	if ErrorLevel
-	{
-		BlockInput MouseMoveOff
-        Gui, Destroy
-		MsgBox,, Timeout Error, "Open Patient Case" window took too long to open
-		Exit
-	}
-	
-	BlockInput MouseMove ; Export Clicks
-	Sleep, 200
-	Click, 389, 46
-	Sleep, 100
-	Send {Down 6}
-	Sleep, 100
-	Send {Enter}
-
-	WinWaitActive, Exported items,, 15 ; Wait for export confirmation box
-	if ErrorLevel
-	{
-		BlockInput MouseMoveOff
-        Gui, Destroy
-		MsgBox,, Timeout Error, Export Confirmation took too long
-		Exit
-	}
-
-	BlockInput MouseMoveOff
-	return
-}
-
 Ortho_takeBitePics(patientInfo) 
 {
 	BlockInput MouseMove
 
 	if !WinExist("ahk_group ThreeShape")
-		{
-			BlockInput MouseMoveOff
-        	Gui, Destroy
-			MsgBox,, Wrong Window, Case must be open in OrthoAnalyzer or ApplianceDesigner
-			Exit
-		}
+	{
+		BlockInput MouseMoveOff
+		Gui, Destroy
+		MsgBox,, Wrong Window, Case must be open in OrthoAnalyzer or ApplianceDesigner
+		Exit
+	}
+
+	WinActivate, ahk_group ThreeShape
+	WinWaitActive, ahk_group ThreeShape
 
 	FileRemoveDir, %screenshotDir%, 1
 	FileCreateDir, %screenshotDir%
-
 	screenshotName := patientInfo["firstName"] patientInfo["lastName"]
 
-	Ortho_View(frontViewY, bottomViewY, topTick)
+	quickClick(3shapeButtons["allViewX"], 3shapeButtons["frontViewY"])
 	Sleep, 500
 	CaptureScreen(screenshotName "Front.jpg") ; function defined in CaptureScreen Library
 
-	Ortho_View(leftViewY, bottomViewY, topTick)
+	quickClick(3shapeButtons["allViewX"], 3shapeButtons["leftViewY"])
 	Sleep, 500
 
 	CaptureScreen(screenshotName "Left.jpg")
 
-	Ortho_View(rightViewY, bottomViewY, topTick)
+	quickClick(3shapeButtons["allViewX"], 3shapeButtons["rightViewY"])
 	Sleep, 500
 
 	CaptureScreen(screenshotName "Right.jpg")
@@ -348,29 +377,73 @@ Ortho_takeBitePics(patientInfo)
 	return screenshotDir
 }
 
-ortho_sendText(to_send, target_box, target_window)
+Ortho_toolSelect(selectedTool) ; select or apply specified tool
 {
-	While(return_text != to_send && loop_check < 5)
+	ControlGetText, PrepStep, TdfInfoCaption2, ahk_group ThreeShape
+	if PrepStep not in Sculpt Maxillary,Sculpt Mandibular 
 	{
-		ControlFocus, %target_box%, %target_window%
-		Sleep, 100
-		Send, ^a
-		Sleep, 100
-		Send, {del}
-		Sleep, 100
-		Send, %to_send%
-		Sleep, 100
-		Send, {del}
-		Sleep, 100
-		ControlGetText, return_text, %target_box%, %target_window%
-		loop_check++
+		return
 	}
-	If(return_text != to_send)
+	ControlGetText, activeTool, TdfGroupInfo1, Feature
+
+	WinActivate Feature, Sculpt toolkit ; the window inside 3Shape with the tool buttons on it
+
+	if (selectedTool = "splineCut")
 	{
-		return False
+		if (activeTool != "Spline cut settings")
+		{
+			quickClick(3shapeButtons["splineCutX"], 3shapeButtons["splineCutY"], 3shapeButtons["splineSmoothX"], 3shapeButtons["splineSmoothY"], 100)
+		}
+		Else
+		{
+			quickClick(3shapeButtons["splineCutApplyX"], 3shapeButtons["splineCutApplyY"])
+		}
 	}
-	else
+	else if (selectedTool = "planeCut")
 	{
-		return True
+		if (activeTool != "Plane cut settings")
+		{
+			quickClick(3shapeButtons["planeCutX"], 3shapeButtons["planeCutY"])
+		}
+		Else
+		{
+			quickClick(3shapeButtons["planeCutApplyX"], 3shapeButtons["planeCutApplyY"])
+		}
 	}
+	else if (selectedTool = "artifact")
+	{
+		if (activeTool != "Remove Artifacts settings")
+		{
+			quickClick(3shapeButtons["artifactX"], 3shapeButtons["artifactY"])
+		}
+		Else
+		{
+			quickClick(3shapeButtons["artifactApplyX"], 3shapeButtons["artifactApplyY"])
+		}
+	}
+	return 
+}
+
+Ortho_nextButton()
+{
+	WinActivate ahk_group ThreeShape
+	ControlGetText, currentPrepStep, TdfInfoCaption2, ahk_group ThreeShape
+	ControlGetText, checkBoxText, TCheckBox5, Virtual Base
+	
+	if (InStr("Virtual base", currentPrepStep) and (checkBoxText = "Decimate base to")) ; on the "fit base" step, set curve to 0
+	{
+		ortho_sendText("0", 3shapeFields["baseCurve"], "Virtual Base")
+		WinActivate ahk_group ThreeShape
+		quickClick(3shapeButtons["nextButtonX"], 3shapeButtons["nextButtonY"])
+	}
+	else if InStr("Prepare occlusion,Setup plane alignment,Sculpt maxillary,Sculpt mandibular,Virtual base", currentPrepStep)
+	{
+		quickClick(3shapeButtons["nextButtonX"], 3shapeButtons["nextButtonY"])
+	}
+	else if InStr("Finish", currentPrepStep)
+	{
+		quickClick(3shapeButtons["nextButtonX"], 3shapeButtons["nextButtonY"])
+		return true
+	}
+	return false
 }

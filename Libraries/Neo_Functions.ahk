@@ -113,9 +113,7 @@ neo_activate(scanField) ; Bring the Chrome running RXWizard to the front, pop in
 
 neo_swapPages(destPage) ; swaps between review and edit pages
 {
-	currentURL := Neo_StillOpen()
-
-	Neo_Activate(scanField=false)
+	currentURL := Neo_Activate(scanField=false)
 
 	if (!InStr(currentURL, "/review/") and !InStr(currentURL, "/edit/"))
 	{
@@ -245,6 +243,7 @@ neo_newNote(orderID) ; Puts new note onto the edit page
 
 	if (!InStr(NeoDriver.Url, "https://portal.rxwizard.com/cases/review/")) and (!InStr(NeoDriver.Url, "https://portal.rxwizard.com/cases/edit/"))
 	{
+		BlockInput MouseMoveOff
 		Gui, Destroy
 		MsgBox Must be on review or edit page to use this function
 		Exit
@@ -253,6 +252,7 @@ neo_newNote(orderID) ; Puts new note onto the edit page
 	try NeoDriver.findElementByCss(bothPageCSS["newNote"]).Click()
 	catch e
 	{
+		BlockInput MouseMoveOff
 		Gui, Destroy
 		MsgBox,, Couldn't Find Element, Couldn't find the "new note" button
 		Exit
@@ -289,7 +289,7 @@ neo_newNote(orderID) ; Puts new note onto the edit page
 	{
 		BlockInput, MouseMoveOff
 		Gui, Destroy
-		MsgBox,, Couldn't Find Element, Couldn't find the note text box
+		MsgBox,, Couldn't Find Element, Couldn't find the note save button
 		Gui, Destroy
 		Exit
 	}
@@ -305,6 +305,7 @@ neo_uploadPic(screenshotDir) {
 	try NeoDriver.findElementByCss(bothPageCSS["uploadFile"]).Click()
 	catch e 
 	{
+		BlockInput MouseMoveOff
 		Gui, Destroy
 		MsgBox,, Website Error, Couldn't find the file upload button on the website, make sure case is in production
 		Exit
@@ -313,6 +314,7 @@ neo_uploadPic(screenshotDir) {
 	WinWaitActive Open,, 5
 	if ErrorLevel 
 	{
+		BlockInput MouseMoveOff
 		Gui, Destroy
 		MsgBox,, Website Error, File Upload window didn't open properly
 		Exit
@@ -347,6 +349,7 @@ neo_start(currentStep) ; hits the start button on the review page
 
 	if !InStr(NeoDriver.Url, "https://portal.rxwizard.com/cases/review/") ; checks to ensure on the review page
 	{
+		BlockInput MouseMoveOff
 		Gui, Destroy
 		MsgBox,, Wrong Page, Must be on the review page for this function
 		Exit
@@ -356,6 +359,7 @@ neo_start(currentStep) ; hits the start button on the review page
 	try new WebDriverWait(NeoDriver, 10).until(ExpectedConditions.element_to_be_clickable(By.CSS_SELECTOR, currentstepxpath))
 	catch e
 	{
+		BlockInput MouseMoveOff
 		Gui, Destroy
 		MsgBox,, Web Error, Couldn't find the start button before it was clicked the first time
 		Exit
@@ -365,6 +369,7 @@ neo_start(currentStep) ; hits the start button on the review page
 	try webstep := NeoDriver.findElementByCss(currentstepxpath).Attribute("innerText")
 	catch e
 	{
+		BlockInput MouseMoveOff
 		Gui, Destroy
 		MsgBox,, Web Error, Couldn't get the text from the start stop button before starting
 		Exit
@@ -376,6 +381,7 @@ neo_start(currentStep) ; hits the start button on the review page
 		try NeoDriver.findElementByCss(currentstepxpath).Click
 		catch e
 		{
+			BlockInput MouseMoveOff
 			Gui, Destroy
 			Msgbox,, Web Error, Couldn't click on the button at the start step
 			Exit
@@ -391,95 +397,10 @@ neo_start(currentStep) ; hits the start button on the review page
 	}
 	else
 	{
+		BlockInput MouseMoveOff
 		Gui, Destroy
 		MsgBox,, Web Error, Button wasn't on the right step
 		Exit
-	}
-	return
-}
-
-neo_Stop(currentStep) ; hits the stop button on the review page
-{
-	global NeoDriver
-
-	; Wait until the button for pushing step is clickable
-	try new WebDriverWait(NeoDriver, 10).until(ExpectedConditions.element_to_be_clickable(By.CSS_SELECTOR, currentstepxpath))
-	catch e
-	{
-		Gui, Destroy
-		MsgBox,, Web Error, Couldn't find the stop button before it was clicked
-		Exit
-	}
-
-	; Try to find the text label on the button for pushing steps
-	try webstep := NeoDriver.findElementByCss(currentstepxpath).Attribute("innerText")
-	catch e
-	{
-		Gui, Destroy
-		MsgBox,, Web Error, Couldn't get the text from the stop button before stopping
-		Exit
-	}
-
-	; loop to check if the button is the right step, clicks it if it is, returns for 5 200ms loops if not
-	failcount := 0
-	Loop
-	{
-		if webstep = %currentstep%
-		{
-			NeoDriver.findElementByCss(currentstepxpath).Click
-
-			Neo_Activate(scanField=false)
-
-			WinWaitActive, New England Orthodontic Laboratory - Google Chrome,, 10
-
-			Sleep, 200
-
-			Send, {Enter}
-			break
-		}
-		else if failcount < 20
-		{
-			Sleep, 400
-			webstep := NeoDriver.findElementByCss(currentstepxpath).Attribute("innerText")
-			failcount++
-			continue
-		}
-		else
-		{
-			Gui, Destroy
-			MsgBox,, Website Error, Button didn't update with current step
-			Exit
-		}
-	}
-
-	try webstep := NeoDriver.findElementByCss(currentstepxpath).Attribute("innerText")
-	catch e
-	{
-		Gui, Destroy
-		MsgBox,, Web Error, Couldn't get the text from the stop button after stopping
-		Exit
-	}
-
-	failcount := 0
-	Loop
-	{
-		if webstep != %currentstep%
-		{
-			break
-		}
-		else if failcount < 20
-		{
-			Sleep, 400
-			webstep := NeoDriver.findElementByCss(currentstepxpath).Attribute("innerText")
-			failcount++
-			continue
-		}
-		else
-		{
-			Gui, Destroy
-			MsgBox,, Website Error, Button didn't update with current step
-			Exit
-		}
 	}
 	return
 }

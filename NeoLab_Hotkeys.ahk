@@ -12,6 +12,7 @@ CoordMode, Pixel, Client
 
 #Include %A_ScriptDir%\Libraries\CaptureScreen.ahk ; 3rd party library, must be in 32bit mode in AHK
 #Include %A_ScriptDir%\Web_Paths.ahk
+#Include %A_ScriptDir%\Ortho_Locations.ahk
 #Include %A_ScriptDir%\Libraries\Neo_Functions.ahk
 #Include %A_ScriptDir%\Libraries\Cadent_Functions.ahk
 #Include %A_ScriptDir%\Libraries\Ortho_Functions.ahk
@@ -33,7 +34,7 @@ global screenshotDir := A_MyDocuments "\Automation\Screenshots"
 ; ===========================================================================================================================
 #IfWinNotActive ahk_exe explorer.exe ; these shouldn't overwrite the default windows functions
 
-f1::
+f1:: ; Advanced search active RXWizard patient in 3Shape using script number
 {
 	Gui_progressBar(action:="create", percent:=0)
 
@@ -46,7 +47,7 @@ f1::
 	return
 }
 
-f2:: 
+f2:: ; takes snapshot from 3shape and uploads to RXWizard
 {
 	Gui_progressBar(action:="create", percent:=0)
 
@@ -97,7 +98,7 @@ f5:: ; Swap between review and edit pages
 	return
 }
 
-f6:: ; hit start/stop button for case, must be on review or edit page
+f6:: ; enters Cadent ID into RXWizard note
 {
 	Gui_progressBar(action:="create", percent:=0)
 
@@ -153,7 +154,7 @@ f9:: ; for importing, returns to patient info and deletes temp STLs
 	WinActivate OrthoAnalyzer. Patient ID:
 	WinWaitActive OrthoAnalyzer. Patient ID:
 
-	quickClick("27", "43")
+	quickClick(3shapeButtons["patientBrowserX"], 3shapeButtons["patientBrowserY"])
 	Gui_progressBar(action:="update", percent:=50)
 
 	if FileExist(A_MyDocuments "\Temp Models\*.stl") 
@@ -237,57 +238,47 @@ SettitleMatchMode, 1
 
 !+t:: ; top/bottom view
 {
-    topTick := Ortho_View(topViewY, bottomViewY, topTick)
+    topTick := Ortho_View(3shapeButtons["topViewY"], 3shapeButtons["bottomViewY"], topTick)
 	return
 }
 
 !+r:: ; right/left view
 {
-	sideTick := Ortho_View(rightViewY, leftViewY, sideTick)
+	sideTick := Ortho_View(3shapeButtons["rightViewY"], 3shapeButtons["leftViewY"], sideTick)
 	return
 }
 
 !+f:: ; front/back view
 {
-	frontTick := Ortho_View(frontViewY, backViewY, frontTick)
+	frontTick := Ortho_View(3shapeButtons["frontViewY"], 3shapeButtons["backViewY"], frontTick)
 	return
 }
 
 !+c::  ; Transparency
 {
-	Ortho_View(transparencyY, transparencyY, topTick)
+	Ortho_transparency()
 	return
 }
 
 !+v:: ; Switch Visible Model
 {
-	UpperDotX := 1708
-	UpperDotY := 79
-	LowerDotX := 1708
-	LowerDotY := 106
-
 	Ortho_VisibleModel()
-	return
-}
-
-!+.:: ; Export finished case
-{
-	Ortho_Export()
 	return
 }
 
 !+g:: ; hits "next" button in 3shape prepping
 {
-	ControlGetText, PrepStep, TdfInfoCaption2, ahk_group ThreeShape
-
-	if InStr("Prepare occlusion,Setup plane alignment,Virtual base,Sculpt maxillary,Sculpt mandibular", PrepStep)
-		WinActivate ahk_group ThreeShape
-		quickClick(nextButtonX, nextButtonY)
+	readyToExport := Ortho_nextButton()
+	if (readyToExport = true)
+	{
+		Gui_progressBar(action:="create", percent:=50)
+		Ortho_Export()
+		Gui_progressBar(action:="destroy", percent:=0)
+	}
 	return
 }
 
-; Wax Knife preset double tap tools
-!+1::
+!+1:: ; Wax Knife preset double tap tools
 {
 	waxOneTick := Ortho_Wax(firstKnife:=1, secondKnife:=5, lastTick:=waxOneTick)
 	return
@@ -311,66 +302,43 @@ SettitleMatchMode, 1
 	return
 }
 
-; Artifact Removal
-!+a::
+!+a:: ; Artifact Removal
 {
-	ControlGetText, PrepStep, TdfInfoCaption2, ahk_group ThreeShape
-	if PrepStep not in Sculpt Maxillary,Sculpt Mandibular 
-	{
-		return
-	}
-
-	WinActivate ahk_group ThreeShape
-	quickClick(artifactX, artifactY)
+	Ortho_toolSelect(selectedTool:="artifact")
 	return
 }
 
-; Plane Cut
-!+p::
+!+p:: ; Plane Cut
 {
-	ControlGetText, PrepStep, TdfInfoCaption2, ahk_group ThreeShape
-	if PrepStep not in Sculpt Maxillary,Sculpt Mandibular 
-	{
-		return
-	}
-
-	WinActivate ahk_group ThreeShape
-	quickClick(planeCutX, planeCutY)
+	Ortho_toolSelect(selectedTool:="planeCut")
 	return
 }
 
-; Spline Cut
-!+s::
+!+s:: ; Spline Cut
 {
-	ControlGetText, PrepStep, TdfInfoCaption2, ahk_group ThreeShape
-	if PrepStep not in Sculpt Maxillary,Sculpt Mandibular 
-	{
-		return
-	}
-
-	WinActivate ahk_group ThreeShape
-	quickClick(splineCutX, splineCutY)
-	BlockInput MouseMove
-	Sleep, 100
-	WinActivate ahk_group ThreeShape
-	quickClick(splineSmoothX, splineSmoothY)
+	Ortho_toolSelect(selectedTool:="splineCut")
 	return
 }
 
-
-quickClick(xCoord, yCoord)
-{
-	BlockInput MouseMove
-    MouseGetPos, x, y
-    Click, %xCoord%, %yCoord%
-    MouseMove, %x%, %y%, 0
-    BlockInput MouseMoveOff
-	return
-}
 
 ; =========================================================================================================================
 ; Extra Functions
 ; =========================================================================================================================
+
+quickClick(xCoord, yCoord, secondXCoord:=false, secondYCoord:=false, pauseTime:=0)
+{
+	BlockInput MouseMove
+    MouseGetPos, x, y
+    Click, %xCoord%, %yCoord%
+	if (secondXCoord != false)
+	{
+		Sleep, %pauseTime%
+		Click, %secondXCoord%, %secondYCoord%
+	}
+    MouseMove, %x%, %y%, 0
+    BlockInput MouseMoveOff
+	return
+}
 
 parseArches() {
     if !FileExist(tempModelsDir "*.stl")
@@ -447,7 +415,7 @@ parseArches() {
 }
 
 finalizeSTLs(finishOptions, existingArchFilenames, filenameBase) {
-    if (finishOptions["arches"] = "both")
+    if (finishOptions["arches"] = True)
     {
         filenameTag := "[2].stl"
     }
@@ -491,7 +459,7 @@ finalizeSTLs(finishOptions, existingArchFilenames, filenameBase) {
 	{							
 		AnimPicFile := A_ScriptDir "\Files\JP.gif"
 		Gui, +ToolWindow
-		AGif := AddAnimatedGIF(AnimPicFile)
+		AddAnimatedGIF(AnimPicFile)
 		Gui, Show
 		return
 	}
@@ -499,17 +467,16 @@ finalizeSTLs(finishOptions, existingArchFilenames, filenameBase) {
 
 AddAnimatedGIF(imagefullpath , x="", y="", w="", h="", guiname = "1")
 {
-	global AG1,AG2,AG3,AG4,AG5,AG6,AG7,AG8,AG9,AG10
-	static AGcount:=0, pic
-	AGcount++
+	global AG1
+	static pic
 	html := "<html><body style='background-color: transparent' style='overflow:hidden' leftmargin='0' topmargin='0'><img src='" imagefullpath "' width=" w " height=" h " border=0 padding=0></body></html>"
 	Gui, AnimGifxx:Add, Picture, vpic, %imagefullpath%
 	GuiControlGet, pic, AnimGifxx:Pos
 	Gui, AnimGifxx:Destroy
-	Gui, %guiname%:Add, ActiveX, % (x = "" ? " " : " x" x ) . (y = "" ? " " : " y" y ) . (w = "" ? " w" picW : " w" w ) . (h = "" ? " h" picH : " h" h ) " vAG" AGcount, Shell.Explorer
-	AG%AGcount%.navigate("about:blank")
-	AG%AGcount%.document.write(html)
-	return "AG" AGcount
+	Gui, %guiname%:Add, ActiveX, % (x = "" ? " " : " x" x ) . (y = "" ? " " : " y" y ) . (w = "" ? " w" picW : " w" w ) . (h = "" ? " h" picH : " h" h ) " vAG1", Shell.Explorer
+	AG1.navigate("about:blank")
+	AG1.document.write(html)
+	return
 }
 
 #Include %A_ScriptDir%\Libraries\Gui.ahk
