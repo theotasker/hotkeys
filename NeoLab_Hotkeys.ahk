@@ -154,7 +154,7 @@ f9:: ; for importing, returns to patient info and deletes temp STLs
 	WinActivate OrthoAnalyzer. Patient ID:
 	WinWaitActive OrthoAnalyzer. Patient ID:
 
-	quickClick("27", "43")
+	quickClick(3shapeButtons["patientBrowserX"], 3shapeButtons["patientBrowserY"])
 	Gui_progressBar(action:="update", percent:=50)
 
 	if FileExist(A_MyDocuments "\Temp Models\*.stl") 

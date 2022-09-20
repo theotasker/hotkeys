@@ -76,7 +76,7 @@ Cadent_ordersPage(patientInfo, patientSearch) ; goes to the patient search page,
 	Send, {tab}{tab}{tab}
 	sleep, 100
 
-    MyCadentDriver.findElementByID(Path_CadentSearchFieldID).click()
+    MyCadentDriver.findElementByID(cadentCssID["searchField"]).click()
 	Sleep, 100
 	Send, {CtrlDown}a{CtrlUp}
 	sleep, 100
@@ -104,7 +104,7 @@ Cadent_exportClick(currentURL)
 		Exit
 	}
 
-	try MyCadentDriver.findElementByID(Path_CadentExport).click() 
+	try MyCadentDriver.findElementByID(cadentCssID["exportLink"]).click() 
 	catch e {
 		BlockInput MouseMoveOff
 		Gui, Destroy		
@@ -270,7 +270,7 @@ Cadent_GetOrderID()
 		Exit
 	}
 
-	orderID := MyCadentDriver.findElementByID(Path_CadentOrderNumberID).Attribute("value")
+	orderID := MyCadentDriver.findElementByID(cadentCssID["orderID"]).Attribute("value")
 
 	return orderID
 }

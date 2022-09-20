@@ -2,6 +2,13 @@
 ; Constants for positional elements in 3Shape
 ; ===========================================================================================================================
 
+/*
+The 3shapeButtons array is a list of X and Y coordinates for all used clickable buttons in 3shapeButtons
+The 3shapeFields array is all of the edit fields and buttons that can be seen by AHK
+
+Use "Window Spy" software (bundled with AutoHotKey) to get these. Coordinates are based on "client"
+*/
+
 global 3shapeButtons := {"":""
 , "allViewX":"1902"
 , "topViewY":"286"
@@ -28,6 +35,8 @@ global 3shapeButtons := {"":""
 , "":""
 , "newPatientModelX":"78"
 , "newPatientModelY":"46"
+, "patientBrowserX":"27"
+, "patientBrowserY":"43"
 , "":""}
 
 global 3shapeFields := {"":""

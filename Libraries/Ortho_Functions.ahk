@@ -1,5 +1,5 @@
 ; ===========================================================================================================================
-; Library for all Standalone functions pertaining to Ortho Analyzer and Appliance designer
+; Library for Ortho_ functions
 ; ===========================================================================================================================
 
 ; ===========================================================================================================================
@@ -25,7 +25,9 @@ GroupAdd, ThreeShapePatient, New patient info
 GroupAdd, ThreeShapeExe, ahk_exe OrthoAnalyzer.exe
 GroupAdd, ThreeShapeExe, ahk_exe ApplianceDesigner.exe
 
-
+; ===========================================================================================================================
+; Functions
+; ===========================================================================================================================
 
 Ortho_AdvSearch(patientInfo, searchMethod) ; function to enter patient name into advanced search field and search using globals
 {

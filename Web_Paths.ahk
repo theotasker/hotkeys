@@ -1,10 +1,16 @@
 ; ================================================================================================================
-; Selenium Paths, need updating as RXWizard gets updated
+; Paths for use by Selenium for RXWizard and MyCadent
 ; ================================================================================================================
 
-; ---------------------------------------------------------------------------------------------------------------------
-; RXWizard Paths
+/*
+These locators are used by Selenium to find their associated elements.
+Most of the RXWizard elements have been updated to CSS IDs instead of paths, as that's a more reliable handle
+Tried to use CSS locators instead of absolute paths for the rest, but couldn't get them all
 
+To update these, open the hotkeys browser and use the "inspect" tool in Chrome. 
+*/
+
+; RXWizard Paths
 global reviewPageCSS := {"":""
 , "generateSchedule": "#main-content-wrapper > div.page-content > main > div.card > div > div:nth-child(1) > button:nth-child(1)"
 , "startStop": "#main-content-wrapper > div.page-content > main > div.card > div > div:nth-child(1) > button"
@@ -19,11 +25,9 @@ global bothPageCSS := {"":""
 , "noteSave": "div[role='document'] button[class='ant-btn ant-btn-primary']"
 , "":""}
 
-; ---------------------------------------------------------------------------------------------------------------------
 ; Mycadent paths
-
-global Path_CadentSearchFieldID := "ctl00_body_OrdersListReport_ctl01_ctl05_ctl05-string-operand"
-
-global Path_CadentOrderNumberID := "ctl00_body_txtOrderHeaderID"
-
-global Path_CadentExport := "ctl00_body_ucOrthoCadLink_OrthoCadLink"
+global cadentCssID := {"":""
+, "searchField":"ctl00_body_OrdersListReport_ctl01_ctl05_ctl05-string-operand"
+, "orderID":"ctl00_body_txtOrderHeaderID"
+, "exportLink":"ctl00_body_ucOrthoCadLink_OrthoCadLink"
+, "":""}
