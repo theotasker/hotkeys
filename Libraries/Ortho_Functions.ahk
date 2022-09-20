@@ -167,6 +167,7 @@ Ortho_Export() ; At end of model edit, waits for patient browser then exports ST
 {
 	BlockInput MouseMove
 
+	WinActivate Open patient case
 	WinWaitActive, Open patient case,, 30
 	if ErrorLevel
 	{
@@ -227,7 +228,7 @@ ortho_sendText(textToSend, targetBox, targetWindow)
 }
 
 ; ===========================================================================================================================
-; Prepping functions
+; Prepping view functions
 ; ===========================================================================================================================
 
 Ortho_View(firstViewY, secondViewY, lastActionTick) ; clicks the view button declared before the function is called, swaps to a secondary view if pressed twice
@@ -306,6 +307,10 @@ Ortho_transparency()
 	}
 	return
 }
+
+; ===========================================================================================================================
+; Prepping tool functions
+; ===========================================================================================================================
 
 Ortho_Wax(firstKnife, secondKnife, lastTick) ; Tool for swapping out wax knifes
 {
