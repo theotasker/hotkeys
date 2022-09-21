@@ -225,8 +225,6 @@ f12:: ; renames arches in temp models folder, asks user for arch selection and a
 
 	finishOptions := Gui_finishImport(existingArchFilenames["arches"])
 
-	msgbox % finishOptions["upper"]
-
 	finalizeSTLs(finishOptions, existingArchFilenames, filenameBase)
 	return
 }
@@ -365,8 +363,8 @@ parseArches() {
 		return
 	}
 
-	tagsUpper := ["Upr.stl", "u.stl", "upper.stl", "max.stl", "Max.stl", "_u-"]
-	tagsLower := ["Lwr.stl", "l.stl", "lower.stl", "man.stl", "Man.stl", "_l-"]
+	tagsUpper := ["Upr.stl", "~Upr", "u.stl", "upper.stl", "max.stl", "Max.stl", "_u-"]
+	tagsLower := ["Lwr.stl", "~Lwr", "l.stl", "lower.stl", "man.stl", "Man.stl", "_l-"]
 
     archFilenames := {"arches":False, "upper":False, "lower":False}
 	tagCheck := False
