@@ -290,7 +290,7 @@ Cadent_moveSTLs(exportFilename, movePics:=True)
 		{
 			if !InStr(filename, "_penta_")
 			{
-				FileMove, %cadentExportDir%%exportFilename%\%filename%, %tempModelsDir%%filename%, 1
+				FileMove, %cadentExportDir%%exportFilename%\%filename%, %tempModelsDir%%exportFilename%.jpg, 1
 			}
 		}
 	}
