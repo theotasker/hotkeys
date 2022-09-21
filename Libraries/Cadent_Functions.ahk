@@ -4,6 +4,7 @@
 
 global Cadentcheck := 0
 global MyCadentDriver := ""
+global cadentExportDir := "C:\Cadent\Export\"
 
 ; ===========================================================================================================================
 ; myCadent site functions
@@ -247,7 +248,7 @@ Cadent_exportOrthoCAD(patientInfo)
 	return exportFilename
 }
 
-Cadent_moveSTLs(exportFilename) 
+Cadent_moveSTLs(exportFilename, movePics:=True) 
 {
 	IfNotExist, C:\Cadent\Export\ 
 	{
@@ -275,8 +276,23 @@ Cadent_moveSTLs(exportFilename)
 
     if FileExist("C:\Cadent\Export\" exportFilename "\" "*.stl") 
 	{
-		FileMove, C:\Cadent\Export\%exportFilename%\*.stl, %tempModelsDir%, 1
+		FileMove, C:\Cadent\Export\%exportFilename%\*.stl, %tempModelsDir%other.stl, 1
 		counter += 1
+	}
+
+	if (movePics = True)
+	{
+		tempPicsList := []  ; list of all STLs in temp models folder
+		Loop Files, %cadentExportDir%%exportFilename%\*.jpg
+			tempPicsList.Push(A_LoopFileName)
+
+		for key, filename in tempPicsList
+		{
+			if !InStr(filename, "_penta_")
+			{
+				FileMove, %cadentExportDir%%exportFilename%\%filename%, %tempModelsDir%%filename%, 1
+			}
+		}
 	}
 
     IfExist, C:\Cadent\Export\%exportFilename% 

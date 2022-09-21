@@ -119,7 +119,7 @@ Gui_progressBar(action, percent:=0)
 
 Gui_finishImport(arches) 
 {
-	finishOptions := {"upper":False, "lower":False,"arches":False, "auto":False}
+	global finishOptions := {"upper":False, "lower":False,"arches":False, "auto":False}
 	if (arches = "both")
 	{
 		Gui, Add, Text, x30 y20 w300 h14 +Center, Manual Import:

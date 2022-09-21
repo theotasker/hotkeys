@@ -225,6 +225,8 @@ f12:: ; renames arches in temp models folder, asks user for arch selection and a
 
 	finishOptions := Gui_finishImport(existingArchFilenames["arches"])
 
+	msgbox % finishOptions["upper"]
+
 	finalizeSTLs(finishOptions, existingArchFilenames, filenameBase)
 	return
 }
