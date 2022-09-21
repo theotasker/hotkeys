@@ -111,27 +111,49 @@ neo_activate(scanField) ; Bring the Chrome running RXWizard to the front, pop in
 	return currentURL
 }
 
-neo_swapPages(destPage) ; swaps between review and edit pages
+neo_swapPages(destPage, assignedCases:=false) ; swaps between review and edit pages
 {
 	currentURL := Neo_Activate(scanField=false)
 
-	if (!InStr(currentURL, "/review/") and !InStr(currentURL, "/edit/"))
+	if ((destPage = "review") or (destPage = "edit") or (destPage = "swap"))
 	{
-		Gui, Destroy
-		msgbox,, Wrong Page, Need to be on the review or edit page
-		Exit
-	}
+		if (!InStr(currentURL, "/review/") and !InStr(currentURL, "/edit/"))
+		{
+			Gui, Destroy
+			msgbox,, Wrong Page, Need to be on the review or edit page
+			Exit
+		}
 
-	if (destPage = "review" or (destPage = "swap" and InStr(currentURL, "/edit/")))
-	{
-		destURL := StrReplace(currentURL, "/edit/", "/review/")
+		if (destPage = "review" or (destPage = "swap" and InStr(currentURL, "/edit/")))
+		{
+			destURL := StrReplace(currentURL, "/edit/", "/review/")
+		}
+		else if (destPage = "edit" or (destPage = "swap" and InStr(currentURL, "/review/")))
+		{
+			destURL := StrReplace(currentURL, "/review/", "/edit/")
+		}
 	}
-	else if (destPage = "edit" or (destPage = "swap" and InStr(currentURL, "/review/")))
+	Else
 	{
-		destURL := StrReplace(currentURL, "/review/", "/edit/")
+		destURL := "https://portal.rxwizard.com/cases"
 	}
-
 	NeoDriver.Get(destURL)
+
+	if (assignedCases = True)
+	{
+		try NeoDriver.findElementByCss(casesPageCSS["assignedCases"]).Click()
+		catch e
+		{
+			BlockInput, MouseMoveOff
+			Gui, Destroy
+			MsgBox,, Couldn't Find Element, Couldn't find the "Assigned to me" button
+			Exit
+		}
+
+	}
+
+
+
 	return destURL
 }
 

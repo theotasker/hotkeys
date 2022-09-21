@@ -229,6 +229,12 @@ f12:: ; renames arches in temp models folder, asks user for arch selection and a
 	return
 }
 
+Insert::
+{
+	neo_swapPages(destPage:="cases", assignedCases:=True)
+	return
+}
+
 ; ===========================================================================================================================
 ; 3D Mouse Button Functions for use in Ortho Analyzer or Appliance Designer
 ; ===========================================================================================================================

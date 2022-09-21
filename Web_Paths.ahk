@@ -25,6 +25,10 @@ global bothPageCSS := {"":""
 , "noteSave": "div[role='document'] button[class='ant-btn ant-btn-primary']"
 , "":""}
 
+global casesPageCSS := {"":""
+, "assignedCases":"button[data-cy='Assigned to me']"
+, "":""}
+
 ; Mycadent paths
 global cadentCssID := {"":""
 , "searchField":"ctl00_body_OrdersListReport_ctl01_ctl05_ctl05-string-operand"
