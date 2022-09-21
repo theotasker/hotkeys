@@ -36,7 +36,7 @@ global screenshotDir := A_MyDocuments "\Automation\Screenshots"
 
 f1:: ; Advanced search active RXWizard patient in 3Shape using script number
 {
-	Gui_progressBar(action:="create", percent:=0)
+	Gui_progressBar(action:="create")
 
 	patientInfo := neo_getPatientInfo()
 	Gui_progressBar(action:="update", percent:=50)
@@ -49,7 +49,7 @@ f1:: ; Advanced search active RXWizard patient in 3Shape using script number
 
 f2:: ; takes snapshot from 3shape and uploads to RXWizard
 {
-	Gui_progressBar(action:="create", percent:=0)
+	Gui_progressBar(action:="create")
 
 	patientInfo := neo_getPatientInfo()
 	Gui_progressBar(action:="update", percent:=25)
@@ -68,7 +68,7 @@ f2:: ; takes snapshot from 3shape and uploads to RXWizard
 
 f3:: ; just for testing, for now
 {
-	Gui_progressBar(action:="create", percent:=0)
+	Gui_progressBar(action:="create")
 	Ortho_Export()
 
 	Gui_progressBar(action:="destroy")
@@ -82,7 +82,7 @@ f3:: ; just for testing, for now
 
 f4:: ; place cursor in the search field in RXWizard for barcode scanning
 {
-	Gui_progressBar(action:="create", percent:=0)
+	Gui_progressBar(action:="create")
 
     Neo_activate(scanField:=True)
 	Gui_progressBar(action:="destroy")
@@ -91,7 +91,7 @@ f4:: ; place cursor in the search field in RXWizard for barcode scanning
 
 f5:: ; Swap between review and edit pages
 {
-	Gui_progressBar(action:="create", percent:=0)
+	Gui_progressBar(action:="create")
 
 	Neo_swapPages(destPage:="swap")
 	Gui_progressBar(action:="destroy")
@@ -100,7 +100,7 @@ f5:: ; Swap between review and edit pages
 
 f6:: ; enters Cadent ID into RXWizard note
 {
-	Gui_progressBar(action:="create", percent:=0)
+	Gui_progressBar(action:="create")
 
 	orderID := Cadent_GetOrderID()
 	Gui_progressBar(action:="update", percent:=30)
@@ -119,7 +119,7 @@ f6:: ; enters Cadent ID into RXWizard note
 
 f7:: ; retrieve patient info from RXWizard and perform advanced search inside OrthoAnalyzer
 {
-	Gui_progressBar(action:="create", percent:=0)
+	Gui_progressBar(action:="create")
 
 	patientInfo := neo_getPatientInfo()
 	Gui_progressBar(action:="update", percent:=50)
@@ -131,7 +131,7 @@ f7:: ; retrieve patient info from RXWizard and perform advanced search inside Or
 
 f8:: ; Create new patient if non exists, then create model set
 {
-	Gui_progressBar(action:="create", percent:=0)
+	Gui_progressBar(action:="create")
 
 	patientInfo := neo_getPatientInfo()
 	Gui_progressBar(action:="update", percent:=50)
@@ -143,7 +143,7 @@ f8:: ; Create new patient if non exists, then create model set
 
 f9:: ; for importing, returns to patient info and deletes temp STLs
 {
-	Gui_progressBar(action:="create", percent:=0)
+	Gui_progressBar(action:="create")
 
 	if !WinExist("OrthoAnalyzer. Patient ID:") 
 	{
@@ -173,7 +173,7 @@ f9:: ; for importing, returns to patient info and deletes temp STLs
 
 f10:: ; get patient info from RXWizard and search in myCadent
 {
-	Gui_progressBar(action:="create", percent:=0)
+	Gui_progressBar(action:="create")
 
 	if !Cadent_StillOpen()
 	{
@@ -191,7 +191,7 @@ f10:: ; get patient info from RXWizard and search in myCadent
 
 f11:: ; While on patient page in myCadent, export STL
 {
-	Gui_progressBar(action:="create", percent:=0)
+	Gui_progressBar(action:="create")
 
 	patientInfo := neo_getPatientInfo()
 	Gui_progressBar(action:="update", percent:=10)
@@ -212,7 +212,7 @@ f11:: ; While on patient page in myCadent, export STL
 
 f12:: ; renames arches in temp models folder, asks user for arch selection and auto vs manual importing, moves files
 {
-	Gui_progressBar(action:="create", percent:=0)
+	Gui_progressBar(action:="create")
 
 	patientInfo := neo_getPatientInfo()
 	Gui_progressBar(action:="update", percent:=10)
