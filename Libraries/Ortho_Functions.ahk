@@ -29,7 +29,7 @@ GroupAdd, ThreeShapeExe, ahk_exe ApplianceDesigner.exe
 ; Data entry functions
 ; ===========================================================================================================================
 
-Ortho_AdvSearch(patientInfo, searchMethod) ; function to enter patient name into advanced search field and search using globals
+Ortho_advSearch(patientInfo, searchMethod) ; function to enter patient name into advanced search field and search using globals
 {
 	BlockInput MouseMove
 
@@ -90,19 +90,19 @@ Ortho_AdvSearch(patientInfo, searchMethod) ; function to enter patient name into
 
 	if (searchMethod = "patientName")
 	{
-		ortho_sendText(patientInfo["firstName"], 3shapeFields["advSearchFirst"], "Open patient case")
-		ortho_sendText(patientInfo["lastName"], 3shapeFields["advSearchLast"], "Open patient case")
-		ortho_sendText(patientInfo["clinicName"], 3shapeFields["advSearchClinic"], "Open patient case")
+		Ortho_sendText(patientInfo["firstName"], 3shapeFields["advSearchFirst"], "Open patient case")
+		Ortho_sendText(patientInfo["lastName"], 3shapeFields["advSearchLast"], "Open patient case")
+		Ortho_sendText(patientInfo["clinicName"], 3shapeFields["advSearchClinic"], "Open patient case")
 
-		ortho_sendText("", 3shapeFields["advSearchScript"], "Open patient case")
+		Ortho_sendText("", 3shapeFields["advSearchScript"], "Open patient case")
 	}
 	else 
 	{
-		ortho_sendText(patientInfo["scriptNumber"], 3shapeFields["advSearchScript"], "Open patient case")
+		Ortho_sendText(patientInfo["scriptNumber"], 3shapeFields["advSearchScript"], "Open patient case")
 
-		ortho_sendText("", 3shapeFields["advSearchFirst"], "Open patient case")
-		ortho_sendText("", 3shapeFields["advSearchLast"], "Open patient case")
-		ortho_sendText("", 3shapeFields["advSearchClinic"], "Open patient case")
+		Ortho_sendText("", 3shapeFields["advSearchFirst"], "Open patient case")
+		Ortho_sendText("", 3shapeFields["advSearchLast"], "Open patient case")
+		Ortho_sendText("", 3shapeFields["advSearchClinic"], "Open patient case")
 	}
 
 	ControlFocus, 3shapeFields["advSearchGo"], Open patient case
@@ -114,7 +114,7 @@ Ortho_AdvSearch(patientInfo, searchMethod) ; function to enter patient name into
     return
 }
 
-ortho_createModelSet(patientInfo)
+Ortho_createModelSet(patientInfo)
 {
 	BlockInput MouseMove
 
@@ -142,14 +142,14 @@ ortho_createModelSet(patientInfo)
     SetTitleMatchMode, 3
     if WinActive("New patient info",, model)
     {
-		ortho_sendText(patientInfo["firstName"] patientInfo["lastName"], 3shapeFields["newPatientExt"], "New patient info")
-		ortho_sendText(patientInfo["firstName"], 3shapeFields["newPatientFirst"], "New patient info")
-		ortho_sendText(patientInfo["lastName"], 3shapeFields["newPatientLast"], "New patient info")
-		ortho_sendText(patientInfo["clinicName"], 3shapeFields["newPatientClinic"], "New patient info")
+		Ortho_sendText(patientInfo["firstName"] patientInfo["lastName"], 3shapeFields["newPatientExt"], "New patient info")
+		Ortho_sendText(patientInfo["firstName"], 3shapeFields["newPatientFirst"], "New patient info")
+		Ortho_sendText(patientInfo["lastName"], 3shapeFields["newPatientLast"], "New patient info")
+		Ortho_sendText(patientInfo["clinicName"], 3shapeFields["newPatientClinic"], "New patient info")
     }
     else if WinActive("New patient model set info")
     {
-		ortho_sendText(patientInfo["scriptNumber"], 3shapeFields["newModelScript"], "New patient model set info")
+		Ortho_sendText(patientInfo["scriptNumber"], 3shapeFields["newModelScript"], "New patient model set info")
     }
     else
     {
@@ -163,7 +163,7 @@ ortho_createModelSet(patientInfo)
     return
 }
 
-Ortho_Export() ; At end of model edit, waits for patient browser then exports STL
+Ortho_export() ; At end of model edit, waits for patient browser then exports STL
 {
 	BlockInput MouseMove
 
@@ -198,7 +198,7 @@ Ortho_Export() ; At end of model edit, waits for patient browser then exports ST
 	return
 }
 
-ortho_sendText(textToSend, targetBox, targetWindow)
+Ortho_sendText(textToSend, targetBox, targetWindow)
 {
 	ControlGetText, returnText, %targetBox%, %targetWindow%
 
@@ -231,7 +231,7 @@ ortho_sendText(textToSend, targetBox, targetWindow)
 ; Prepping view functions
 ; ===========================================================================================================================
 
-Ortho_View(firstViewY, secondViewY, lastActionTick) ; clicks the view button declared before the function is called, swaps to a secondary view if pressed twice
+Ortho_view(firstViewY, secondViewY, lastActionTick) ; clicks the view button declared before the function is called, swaps to a secondary view if pressed twice
 {
     global toggle
 	BlockInput MouseMove
@@ -263,7 +263,7 @@ Ortho_View(firstViewY, secondViewY, lastActionTick) ; clicks the view button dec
 	return currentTick
 }
 
-Ortho_VisibleModel() ; Swaps visible Model
+Ortho_visibleModel() ; Swaps visible Model
 {
 	BlockInput MouseMove
 
@@ -312,7 +312,7 @@ Ortho_transparency()
 ; Prepping tool functions
 ; ===========================================================================================================================
 
-Ortho_Wax(firstKnife, secondKnife, lastTick) ; Tool for swapping out wax knifes
+Ortho_wax(firstKnife, secondKnife, lastTick) ; Tool for swapping out wax knifes
 {
 	BlockInput MouseMove
 	ControlGetText, PrepStep, TdfInfoCaption2, ahk_group ThreeShape
@@ -432,7 +432,7 @@ Ortho_nextButton()
 	
 	if (InStr("Virtual base", currentPrepStep) and (checkBoxText = "Decimate base to")) ; on the "fit base" step, set curve to 0
 	{
-		ortho_sendText("0", 3shapeFields["baseCurve"], "Virtual Base")
+		Ortho_sendText("0", 3shapeFields["baseCurve"], "Virtual Base")
 		WinActivate ahk_group ThreeShape
 		quickClick(3shapeButtons["nextButtonX"], 3shapeButtons["nextButtonY"])
 	}

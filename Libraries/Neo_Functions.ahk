@@ -5,6 +5,7 @@
 global NeoCheck := false
 global NeoDriver := ""
 global chromeShortcutDir := A_MyDocuments "\Automation\"
+global neolabDomain := "https://portal.rxwizard.com"
 
 ChromeGet(IP_Port := "127.0.0.1:9222") ; attaches web driver to last opened tab
 {
@@ -14,7 +15,7 @@ ChromeGet(IP_Port := "127.0.0.1:9222") ; attaches web driver to last opened tab
 	return Driver
 }
 
-neo_startWebDriver() ; closes existing Chromes and opens a new one, binds it to NeoDriver
+Neo_startWebDriver() ; closes existing Chromes and opens a new one, binds it to NeoDriver
 {
 	if WinExist("ahk_exe chrome.exe")
 		MsgBox, 4, Close Chrome?, Close all current instances of Chrome? (suggested)
@@ -43,7 +44,7 @@ neo_startWebDriver() ; closes existing Chromes and opens a new one, binds it to 
 	Run, ChromeForAHK.lnk, %chromeShortcutDir%
 	Sleep, 500
 	global NeoDriver := ChromeGet()
-	NeoDriver.Get("https://portal.rxwizard.com/cases")
+	NeoDriver.Get(neolabDomain "/cases")
 
 	NeoCheck := true
 
@@ -52,13 +53,13 @@ neo_startWebDriver() ; closes existing Chromes and opens a new one, binds it to 
 	return
 }
 
-neo_stillOpen() ; checks to see if a NeoDriver is bound, creates a new one if not
+Neo_stillOpen() ; checks to see if a NeoDriver is bound, creates a new one if not
 {
 	if (NeoCheck != true)
 	{
 		MsgBox, 4, Open NeoDriver?, No instance of NeoDriver found, initiate?
 			IfMsgBox, Yes
-				neo_startWebDriver()
+				Neo_startWebDriver()
 			IfMsgBox, No
 				Exit
 	}
@@ -68,19 +69,19 @@ neo_stillOpen() ; checks to see if a NeoDriver is bound, creates a new one if no
 	{
 		MsgBox, 4, Webdriver Error, The tab for driving Portal.RXWizard was closed, initiate webdriver?
 			IfMsgBox, Yes
-				neo_startWebDriver()
+				Neo_startWebDriver()
 			IfMsgBox, No
 			{
 				Exit
 			}
-		return "https://portal.rxwizard.com/cases"
+		return neolabDomain "/cases"
 	}
 
 	return currentURL
 }
 
 
-neo_activate(scanField) ; Bring the Chrome running RXWizard to the front, pop into scan field if requested
+Neo_activate(scanField) ; Bring the Chrome running RXWizard to the front, pop into scan field if requested
 {
 	currentURL := Neo_StillOpen()
 
@@ -97,7 +98,7 @@ neo_activate(scanField) ; Bring the Chrome running RXWizard to the front, pop in
 
 	if (scanField = true)
 	{
-		if !InStr(currentURL, "https://portal.rxwizard.com") ; Must be on a rxwizard page
+		if !InStr(currentURL, neolabDomain) ; Must be on a rxwizard page
 		{
 			Gui, Destroy
 			MsgBox,, Wrong Page, Must be on an RxWizard Page
@@ -111,35 +112,57 @@ neo_activate(scanField) ; Bring the Chrome running RXWizard to the front, pop in
 	return currentURL
 }
 
-neo_swapPages(destPage) ; swaps between review and edit pages
+Neo_swapPages(destPage, assignedCases:=false) ; swaps between review and edit pages
 {
 	currentURL := Neo_Activate(scanField=false)
 
-	if (!InStr(currentURL, "/review/") and !InStr(currentURL, "/edit/"))
+	if ((destPage = "review") or (destPage = "edit") or (destPage = "swap"))
 	{
-		Gui, Destroy
-		msgbox,, Wrong Page, Need to be on the review or edit page
-		Exit
-	}
+		if (!InStr(currentURL, "/review/") and !InStr(currentURL, "/edit/"))
+		{
+			Gui, Destroy
+			msgbox,, Wrong Page, Need to be on the review or edit page
+			Exit
+		}
 
-	if (destPage = "review" or (destPage = "swap" and InStr(currentURL, "/edit/")))
-	{
-		destURL := StrReplace(currentURL, "/edit/", "/review/")
+		if (destPage = "review" or (destPage = "swap" and InStr(currentURL, "/edit/")))
+		{
+			destURL := StrReplace(currentURL, "/edit/", "/review/")
+		}
+		else if (destPage = "edit" or (destPage = "swap" and InStr(currentURL, "/review/")))
+		{
+			destURL := StrReplace(currentURL, "/review/", "/edit/")
+		}
 	}
-	else if (destPage = "edit" or (destPage = "swap" and InStr(currentURL, "/review/")))
+	Else
 	{
-		destURL := StrReplace(currentURL, "/review/", "/edit/")
+		destURL := neolabDomain "/cases"
 	}
-
 	NeoDriver.Get(destURL)
+
+	if (assignedCases = True)
+	{
+		try NeoDriver.findElementByCss(casesPageCSS["assignedCases"]).Click()
+		catch e
+		{
+			BlockInput, MouseMoveOff
+			Gui, Destroy
+			MsgBox,, Couldn't Find Element, Couldn't find the "Assigned to me" button
+			Exit
+		}
+
+	}
+
+
+
 	return destURL
 }
 
-neo_getPatientInfo() ; retrieves and returns patient info from review/edit pages
+Neo_getPatientInfo() ; retrieves and returns patient info from review/edit pages
 {
 	currentURL := Neo_Activate(scanField:=false)
 
-    if !InStr(currentURL, "https://portal.rxwizard.com/cases/review/") and !InStr(currentURL, "https://portal.rxwizard.com/cases/edit/")
+    if !InStr(currentURL, neolabDomain "/cases/review/") and !InStr(currentURL, neolabDomain "/cases/edit/")
 	{
 		Gui, Destroy
         MsgBox Not on the review or edit page
@@ -148,7 +171,7 @@ neo_getPatientInfo() ; retrieves and returns patient info from review/edit pages
 
 	patientInfo := {"scriptNumber": "", "panNumber": "", "engravingBarcode": "", "firstName": "", "lastName": "", "fullName": "", "clinicName": ""}
 
-	if InStr(currentURL, "https://portal.rxwizard.com/cases/review/") ; if on review page, name is listed as full name and pan number has no ID
+	if InStr(currentURL, neolabDomain "/cases/review/") ; if on review page, name is listed as full name and pan number has no ID
 	{
 		try patientInfo["fullName"] := NeoDriver.findElementByCss(reviewPageCSS["patientName"]).Attribute("innerText")
 		catch e
@@ -234,14 +257,14 @@ neo_getPatientInfo() ; retrieves and returns patient info from review/edit pages
     return patientInfo
 }
 
-neo_newNote(orderID) ; Puts new note onto the edit page
+Neo_newNote(orderID) ; Puts new note onto the edit page
 {
 	global NeoDriver
 	BlockInput MouseMove
 
 	Neo_StillOpen()
 
-	if (!InStr(NeoDriver.Url, "https://portal.rxwizard.com/cases/review/")) and (!InStr(NeoDriver.Url, "https://portal.rxwizard.com/cases/edit/"))
+	if (!InStr(NeoDriver.Url, neolabDomain "/cases/review/")) and (!InStr(NeoDriver.Url, neolabDomain "/cases/edit/"))
 	{
 		BlockInput MouseMoveOff
 		Gui, Destroy
@@ -290,7 +313,6 @@ neo_newNote(orderID) ; Puts new note onto the edit page
 		BlockInput, MouseMoveOff
 		Gui, Destroy
 		MsgBox,, Couldn't Find Element, Couldn't find the note save button
-		Gui, Destroy
 		Exit
 	}
 
@@ -298,7 +320,7 @@ neo_newNote(orderID) ; Puts new note onto the edit page
 	return
 }
 
-neo_uploadPic(screenshotDir) {
+Neo_uploadPic(screenshotDir) {
 	global NeoDriver
 	BlockInput MouseMove
 
@@ -343,11 +365,11 @@ neo_uploadPic(screenshotDir) {
 ; Deprecated, updates to RXWizard made obsolete
 ; =========================================================================================================================
 
-neo_start(currentStep) ; hits the start button on the review page
+Neo_start(currentStep) ; hits the start button on the review page
 {
 	global NeoDriver
 
-	if !InStr(NeoDriver.Url, "https://portal.rxwizard.com/cases/review/") ; checks to ensure on the review page
+	if !InStr(NeoDriver.Url, neolabDomain "/cases/review/") ; checks to ensure on the review page
 	{
 		BlockInput MouseMoveOff
 		Gui, Destroy

@@ -22,7 +22,11 @@ global reviewPageCSS := {"":""
 global bothPageCSS := {"":""
 , "uploadFile": "div[data-cy='Case files'] div[class='ant-col ant-col-xxl-12'] div[class='ant-upload-drag-container']"
 , "newNote": "div[data-cy='Notes'] button[class='ant-btn ant-btn-primary']"
-, "noteSave": "div[role='document'] button[class='ant-btn ant-btn-primary']"
+, "noteSave": "div[class='ant-modal modal-form'] button[class='ant-btn ant-btn-primary']"
+, "":""}
+
+global casesPageCSS := {"":""
+, "assignedCases":"button[data-cy='Assigned to me']"
 , "":""}
 
 ; Mycadent paths

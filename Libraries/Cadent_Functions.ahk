@@ -4,12 +4,14 @@
 
 global Cadentcheck := 0
 global MyCadentDriver := ""
+global cadentExportDir := "C:\Cadent\Export\"
+global mycadentDomain := "https://mycadent.com"
 
 ; ===========================================================================================================================
 ; myCadent site functions
 ; ===========================================================================================================================
 
-Cadent_StartWebDriver()
+Cadent_startWebDriver()
 {
 	if !FileExist(chromeShortcutDir "ChromeForAHK.lnk")
 	{
@@ -23,21 +25,21 @@ Cadent_StartWebDriver()
 	Sleep, 500
 	global MyCadentDriver := ChromeGet()
 	MyCadentDriver.SwitchToWindowByTitle("New Tab")
-	MyCadentDriver.Get("https://mycadent.com/COrdersList.aspx")
+	MyCadentDriver.Get(mycadentDomain "/COrdersList.aspx")
 
 	CadentCheck := 1
 
 	return MyCadentDriver
 }
 
-Cadent_StillOpen() ; Checks to see if cadent driver is open, reopens if not
+Cadent_stillOpen() ; Checks to see if cadent driver is open, reopens if not
 {
 	if CadentCheck = 0
 	{
 		MsgBox, 4, Open CadentDriver?, No instance of CadentDriver found, initiate?
 			IfMsgBox, Yes
 			{
-				global MyCadentDriver := Cadent_StartWebDriver()
+				global MyCadentDriver := Cadent_startWebDriver()
 				return False
 			}
 			IfMsgBox, No
@@ -51,7 +53,7 @@ Cadent_StillOpen() ; Checks to see if cadent driver is open, reopens if not
 	{
 		MsgBox, 4, Webdriver Error, The tab for driving MyCadent was closed, reinitiate webdriver?
 			IfMsgBox, Yes
-				global MyCadentDriver := Cadent_StartWebDriver()
+				global MyCadentDriver := Cadent_startWebDriver()
 				return False
 			IfMsgBox, No
 			{
@@ -64,9 +66,9 @@ Cadent_StillOpen() ; Checks to see if cadent driver is open, reopens if not
 
 Cadent_ordersPage(patientInfo, patientSearch) ; goes to the patient search page, enters patient info if asked
 {
-	if (MyCadentDriver.Url != "https://mycadent.com/COrdersList.aspx")
+	if (MyCadentDriver.Url != mycadentDomain "/COrdersList.aspx")
     {
-        MyCadentDriver.Get("https://mycadent.com/COrdersList.aspx")
+        MyCadentDriver.Get(mycadentDomain "/COrdersList.aspx")
     }
 
 	BlockInput MouseMove
@@ -101,11 +103,11 @@ Cadent_ordersPage(patientInfo, patientSearch) ; goes to the patient search page,
 	return
 }
 
-Cadent_GetOrderID()
+Cadent_getOrderID()
 {
-	Cadent_StillOpen()
+	Cadent_stillOpen()
 
-	if !InStr(MyCadentDriver.Url, "https://mycadent.com/CaseInfo.aspx")
+	if !InStr(MyCadentDriver.Url, "/CaseInfo.aspx")
 	{
 		BlockInput MouseMoveOff
 		Gui, Destroy		
@@ -122,7 +124,7 @@ Cadent_exportClick(currentURL)
 {
 	BlockInput MouseMove
 
-	if !InStr(currentURL, "https://mycadent.com/CaseInfo.aspx") {
+	if !InStr(currentURL, "/CaseInfo.aspx") {
 		BlockInput MouseMoveOff
 		Gui, Destroy
 		MsgBox,, Wrong Page, Must be on a case page in MyCadent
@@ -247,7 +249,7 @@ Cadent_exportOrthoCAD(patientInfo)
 	return exportFilename
 }
 
-Cadent_moveSTLs(exportFilename) 
+Cadent_moveSTLs(exportFilename, movePics:=True) 
 {
 	IfNotExist, C:\Cadent\Export\ 
 	{
@@ -275,8 +277,23 @@ Cadent_moveSTLs(exportFilename)
 
     if FileExist("C:\Cadent\Export\" exportFilename "\" "*.stl") 
 	{
-		FileMove, C:\Cadent\Export\%exportFilename%\*.stl, %tempModelsDir%, 1
+		FileMove, C:\Cadent\Export\%exportFilename%\*.stl, %tempModelsDir%other.stl, 1
 		counter += 1
+	}
+
+	if (movePics = True)
+	{
+		tempPicsList := []  ; list of all STLs in temp models folder
+		Loop Files, %cadentExportDir%%exportFilename%\*.jpg
+			tempPicsList.Push(A_LoopFileName)
+
+		for key, filename in tempPicsList
+		{
+			if !InStr(filename, "_penta_")
+			{
+				FileMove, %cadentExportDir%%exportFilename%\%filename%, %tempModelsDir%%exportFilename%.jpg, 1
+			}
+		}
 	}
 
     IfExist, C:\Cadent\Export\%exportFilename% 
