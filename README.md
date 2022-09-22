@@ -57,6 +57,7 @@ These functions do not require any specific software to be active. AHK will get 
 - F12: Retrieves patient info from current RXWizard case page, and prompts user on which arches should be finished, and whether auto-importing should be used
 
 ### 3D Mouse Functions Inside 3Shape Model Prep
+These functions will only be activated while Ortho Analyzer or Appliance Designer are the active window.
 - "Fit" button: Presses "next" button during model prep. For last step, also initiates STL export from patient browser.
 - "T", "F", "R" buttons: Clicks snap view buttons. Single press clicks default view, double press clicks alternate view, i.e. "front" vs "back"
 - "Rotate Lock" button: Toggles model transparency
